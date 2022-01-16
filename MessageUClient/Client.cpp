@@ -12,7 +12,7 @@ Client::Client()
 		size_t pos = line.find(":");
 		if (pos != string::npos) {
 			address = line.substr(0, pos);
-			port = line.substr(pos);
+			port = line.substr(pos+1);
 			sm = new SessionManager();
 		}
 		else {
