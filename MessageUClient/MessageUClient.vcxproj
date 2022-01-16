@@ -89,7 +89,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <LanguageStandard>stdcpp17</LanguageStandard>
+      <LanguageStandard>stdcpp20</LanguageStandard>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
     </ClCompile>
     <Link>
@@ -143,10 +143,29 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="AESWrapper.cpp" />
+    <ClCompile Include="Base64Wrapper.cpp" />
+    <ClCompile Include="Client.cpp" />
     <ClCompile Include="MessageUClient.cpp" />
+    <ClCompile Include="misc.cpp" />
+    <ClCompile Include="packetReciever.cpp" />
+    <ClCompile Include="packetTransmitter.cpp" />
+    <ClCompile Include="RSAWrapper.cpp" />
+    <ClCompile Include="SessionManager.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="AESWrapper.h" />
+    <ClInclude Include="Base64Wrapper.h" />
+    <ClInclude Include="Client.h" />
+    <ClInclude Include="misc.h" />
+    <ClInclude Include="packetReciever.h" />
+    <ClInclude Include="Packets.h" />
+    <ClInclude Include="packetTransmitter.h" />
+    <ClInclude Include="RSAWrapper.h" />
+    <ClInclude Include="SessionManager.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
