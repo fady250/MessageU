@@ -41,16 +41,18 @@ void Client::start()
 
 	for (std::string input; std::getline(std::cin, input);) {
 		std::cout << input << std::endl;
-		handle_user_input(input);
+		validate_user_input(input);		 
+		sm->handle_request(s);					// TODO get user request
 		std::cout << "?";
 	}
 }
 
-void Client::handle_user_input(string input)
+void Client::validate_user_input(string input)
 {
 	// validate input 
 	// move from string to other representation ???
-	sm->handle_request();
+	// return enum user request
+	
 }
 
 Client::~Client()

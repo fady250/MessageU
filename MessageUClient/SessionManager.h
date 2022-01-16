@@ -3,6 +3,9 @@
 #include "Base64Wrapper.h"
 #include "AESWrapper.h"
 #include "RSAWrapper.h"
+#include <boost/asio.hpp>
+
+using boost::asio::ip::tcp;
 
 class SessionManager {
 	// crypto 
@@ -10,6 +13,6 @@ class SessionManager {
 	// pkt rx 
 public:
 	SessionManager();
-	void handle_request();
+	void handle_request(tcp::socket& sock);
 	~SessionManager();
 };

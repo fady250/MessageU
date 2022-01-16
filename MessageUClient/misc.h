@@ -6,14 +6,9 @@
 #define TXT		4
 #define RANDOM_NAME_LEN 32
 
-enum class operation { backup = 100, recover = 200, delete_file = 201, list_files = 202 };
-enum class 
-	status { succ_restored = 210, 
-	succ_list = 211, 
-	succ_backup_delete = 212, 
-	err_doesnt_exist = 1001, 
-	err_no_files = 1002, 
-	error = 1003 };
+enum class requestCode { userRegister = 1100, clientsList = 1102, sendMsg = 1103, pullMsgs = 1104 };
+enum class msgType { symKeyReq = 1, symKeySend = 2, textMsgSend = 3, fileSend = 4 };
+
 
 class misc {
 public:

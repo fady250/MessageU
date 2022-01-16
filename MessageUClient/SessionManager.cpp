@@ -5,7 +5,7 @@ SessionManager::SessionManager() {
 }
 
 
-void SessionManager::handle_request() {
+void SessionManager::handle_request(tcp::socket& sock) {
 
 }
 

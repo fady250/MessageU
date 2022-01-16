@@ -1,7 +1,6 @@
 #pragma once
 
 #include <boost/asio.hpp>
-#include "packets.h"
 #include "string.h"
 #include "misc.h"
 #include "packetReciever.h"

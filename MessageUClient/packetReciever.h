@@ -1,7 +1,6 @@
 #pragma once
 
 #include <boost/asio.hpp>
-#include "packets.h"
 #include <fstream>
 using boost::asio::ip::tcp;
 
