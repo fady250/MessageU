@@ -4,6 +4,7 @@ MessageUClient/Debug
 
 MessageUServer/.idea
 MessageUServer/venv
+MessageUServer/__pycache__
 
 # Prerequisites
 *.d
