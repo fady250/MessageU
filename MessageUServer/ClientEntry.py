@@ -1,0 +1,2 @@
+class ClientEntry(object):
+    pass
