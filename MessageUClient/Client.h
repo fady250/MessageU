@@ -13,7 +13,7 @@ private:
 	string address;
 	string port;
 	SessionManager* sm = nullptr;
-	void validate_user_input(string input);
+	void handle_user_input(tcp::socket& sock);
 public:
 	Client();
 	void start();
