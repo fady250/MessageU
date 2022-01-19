@@ -1,21 +1,43 @@
 #include "packetTransmitter.h"
 
+
+packetTransmitter::packetTransmitter() {}
+
+packetTransmitter::~packetTransmitter() {}
+
+void packetTransmitter::send(tcp::socket& sock, requestPacketHeader* header) {											// for 1101/1104
+	boost::system::error_code ec;
+	// send header 
+	boost::asio::write(sock, boost::asio::buffer(header->buf), ec);
+}
+
+void packetTransmitter::send(tcp::socket& sock, requestPacketHeader* header, registerPacketPayload* registerPay) {		// for 1100
+	boost::system::error_code ec;
+	// send header 
+	boost::asio::write(sock, boost::asio::buffer(header->buf), ec);
+	// send payload
+	boost::asio::write(sock, boost::asio::buffer(registerPay->buf), ec);
+}
+
+void packetTransmitter::send(tcp::socket& sock, requestPacketHeader* header, pubKeyPullPayload* pay) {					// for 1102
+	boost::system::error_code ec;
+	// send header 
+	boost::asio::write(sock, boost::asio::buffer(header->buf), ec);
+	// send payload
+	boost::asio::write(sock, boost::asio::buffer(pay->client_id), ec);
+}
+
+void packetTransmitter::send(tcp::socket& sock, requestPacketHeader* header, msgSendPacketPayload* msgPay) {				// for 1103	
+	// will use chunks when its a file , will send the whole when its text
+	boost::system::error_code ec;
+	// send header 
+	boost::asio::write(sock, boost::asio::buffer(header->buf), ec);
+	// send payload
+	boost::asio::write(sock, boost::asio::buffer(msgPay->buf), ec);
+}
+
+
 /*
-packetTransmitter::packetTransmitter() {
-	constHeader = new responsePacketHeaderConst;	// the rest of the packet will be dynamically allocated according to sizes
-}
-
-void packetTransmitter::buildConstHeader(enum class status st) {
-	constHeader->hc.version = VERSION;
-	constHeader->hc.status = (uint16_t)st;
-}
-
-void packetTransmitter::buildFlexHeader(std::string st,uint16_t size) {
-	flexHeader = (PacketHeaderFlex*)new char[sizeof(PacketHeaderFlex) + sizeof(char)*size];
-	flexHeader->hf.namelen = size;
-	memcpy(flexHeader->hf.file_name, st.c_str(),size);
-}
-
 void packetTransmitter::send(tcp::socket& soc, packetReciever* pr) {
 	boost::system::error_code ec;
 	enum class status st = (status)constHeader->hc.status;
@@ -62,11 +84,5 @@ void packetTransmitter::send(tcp::socket& soc, packetReciever* pr) {
 	}
 	if (pr->getConstHeader()->hc.op == (uint16_t)operation::list_files)
 		std::filesystem::remove(misc::convertToString(flexHeader->hf.file_name,flexHeader->hf.namelen));	// delete this text file - server doesnt need it
-}
-
-packetTransmitter::~packetTransmitter() {
-	if (constHeader != nullptr) delete constHeader;
-	if (flexHeader != nullptr) delete flexHeader;
-	if (payChunk != nullptr) delete payChunk;
 }
 */

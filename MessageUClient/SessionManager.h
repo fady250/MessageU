@@ -6,15 +6,19 @@
 #include "packetTransmitter.h"
 #include "packetReciever.h"
 #include <boost/asio.hpp>
+#include "PacketStructs.h"
 
 using boost::asio::ip::tcp;
 using namespace std;
 
 class SessionManager {
 private:
-	AESWrapper* aes;
-	packetTransmitter* pt;
-	packetReciever* pr;
+	AESWrapper* aes = nullptr;
+	RSAPrivateWrapper* rsapriv = nullptr;
+	packetTransmitter* pt = nullptr;
+	packetReciever* pr = nullptr;
+	char my_id[CMN_SIZE] = {0};
+
 public:
 	SessionManager();
 	void handle_request(tcp::socket& sock, requestCode rc, string input);
