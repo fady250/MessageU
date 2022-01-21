@@ -78,11 +78,11 @@ void Client::handle_user_input(tcp::socket& sock)
 				std::cout << "Enter target username : ";
 				std::getline(std::cin, input);
 				if(code == (uint8_t)userInput::SendTxtMsg)											// send text message to client B
-					sm->handle_request(sock, requestCode::sendMsg, msgType::textMsgSend, input);	
+					sm->handle_request(sock, msgType::textMsgSend, input);	
 				if(code == (uint8_t)userInput::RequestSymKey)										// request client B symmetric key
-					sm->handle_request(sock, requestCode::sendMsg, msgType::symKeyReq, input);
+					sm->handle_request(sock, msgType::symKeyReq, input);
 				if (code == (uint8_t)userInput::SendSymKey)											// send my symmetric key to client B
-					sm->handle_request(sock, requestCode::sendMsg, msgType::symKeySend, input);
+					sm->handle_request(sock, msgType::symKeySend, input);
 			}
 			else {
 				cout << "Bad request code, please retry" << endl;

@@ -3,9 +3,16 @@
 
 using namespace std;
 
-/*
+
 packetReciever::packetReciever() {}
 
+void packetReciever::recieve(tcp::socket& sock)
+{
+
+}
+
+
+/*
 void packetReciever::receiveHeader(tcp::socket& soc){
  
 	boost::system::error_code ec;

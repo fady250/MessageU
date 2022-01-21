@@ -6,7 +6,9 @@
 #include "packetTransmitter.h"
 #include "packetReciever.h"
 #include <boost/asio.hpp>
-#include "PacketStructs.h"
+#include "RegisterPacket.h"
+#include "pubKeyPullPacket.h"
+#include "MsgSendPacket.h"
 
 using boost::asio::ip::tcp;
 using namespace std;
@@ -17,11 +19,13 @@ private:
 	RSAPrivateWrapper* rsapriv = nullptr;
 	packetTransmitter* pt = nullptr;
 	packetReciever* pr = nullptr;
-	char my_id[CMN_SIZE] = {0};
+	char* my_id;
+	//TODO vector of class that holds client name + id , filled when receive list of clients from server
+	char* get_recepient_id(string name) const;
 
 public:
 	SessionManager();
 	void handle_request(tcp::socket& sock, requestCode rc, string input);
-	void handle_request(tcp::socket& sock, requestCode rc, msgType mt, string input);
+	void handle_request(tcp::socket& sock, msgType mt, string input);				// for 1103 / 150 user input
 	~SessionManager();
 };

@@ -4,12 +4,12 @@
 
 class ResponseHeader {
 protected:
-	responsePacketHeader* rh;
+	responseHeaderUnion* rh;
 public:
 	ResponseHeader() {
-		rh = new responsePacketHeader;
+		rh = new responseHeaderUnion;
 	}
-	responsePacketHeader* getHeader() const {
+	responseHeaderUnion* getHeader() const {
 		return rh;
 	}
 	~ResponseHeader() {

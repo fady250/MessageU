@@ -1,15 +1,20 @@
 #pragma once
 
-#include "RequestHeader.h"
+#include "requestPacketHeader.h"
 
-class pubKeyPullPacket : RequestHeader {
+class PubKeyPullPacket : public requestPacketHeader {
 private:
 	pubKeyPullPayload* p;
 public:
-	pubKeyPullPacket() :RequestHeader() {
+	PubKeyPullPacket(char* my_id, uint16_t code, char* client_id) :requestPacketHeader(my_id, code) {
 		p = new pubKeyPullPayload;
+		memcpy(p->client_id, client_id, CMN_SIZE);
 	}
-	~pubKeyPullPacket() {
+
+	pubKeyPullPayload* getPay() const {
+		return p;
+	}
+	~PubKeyPullPacket() {
 		delete p;
 	}
 };

@@ -74,16 +74,19 @@
     <ClInclude Include="SessionManager.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="RequestHeader.h">
+    <ClInclude Include="RequestPacketHeader.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="RegisterPacket.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="pubKeyPullPacket.h">
+    <ClInclude Include="PubKeyPullPacket.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="ResponseHeader.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="MsgSendPacket.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

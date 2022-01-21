@@ -42,7 +42,7 @@ struct pubKeyPullPayload {				// no union for this struct
 };
 
 struct msgSendPayload {
-	uint8_t client_id[CMN_SIZE];
+	char recepient_id[CMN_SIZE];
 	uint8_t msg_type;
 	uint32_t content_size;
 	char msg_content[];			// flexible	// sizeof(MsgSendPayload) = 6 , however this memory is allocated Continuously
@@ -52,13 +52,13 @@ struct msgSendPayload {
 
 // unions :
 
-union requestPacketHeader
+union requestHeaderUnion
 {
 	requestHeader h;
 	char buf[sizeof(requestHeader)];
 };
 
-union responsePacketHeader
+union responseHeaderUnion
 {
 	responseHeader h;						
 	char buf[sizeof(responseHeader)];
@@ -66,13 +66,13 @@ union responsePacketHeader
 
 // payload unions :
 
-union registerPacketPayload
+union registerPayloadUnion
 {
 	registerPayload h;
 	char buf[sizeof(registerPayload)];
 };
 
-union msgSendPacketPayload
+union msgSendPayloadUnion
 {
 	msgSendPayload p;							// 6 bytes + variable lenght
 	char buf[sizeof(msgSendPayload)];
