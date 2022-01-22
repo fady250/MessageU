@@ -62,27 +62,32 @@ void Client::handle_user_input(tcp::socket& sock)
 				else {
 					std::cout << "Enter your name : ";
 					std::getline(std::cin, input);
-					sm->handle_request(sock, requestCode::userRegister, input);
+					sm->handle_user_request(sock, requestCode::userRegister, input);
 				}
 			}
-			else if (code == (uint8_t)userInput::RequestList) { sm->handle_request(sock, requestCode::clientsList, ""); }		
+			else if (code == (uint8_t)userInput::RequestList) { sm->handle_user_request(sock, requestCode::clientsList, ""); }
 			else if (code == (uint8_t)userInput::RequestpubKey) {									// request client B public key
 				std::cout << "Enter username for whom you want to request its public key : ";
 				std::getline(std::cin, input);
-				sm->handle_request(sock, requestCode::pullClientPubKey, input);
+				sm->handle_user_request(sock, requestCode::pullClientPubKey, input);
 			}		
 			else if (code == (uint8_t)userInput::Requestmsgs) {										// request to pull waiting messages for me
-				sm->handle_request(sock, requestCode::pullMsgs, ""); 
+				sm->handle_user_request(sock, requestCode::pullMsgs, "");
 			}	
 			else if (code >= (uint8_t)userInput::SendTxtMsg && code <= (uint8_t)userInput::SendSymKey) {
-				std::cout << "Enter target username : ";
-				std::getline(std::cin, input);
-				if(code == (uint8_t)userInput::SendTxtMsg)											// send text message to client B
-					sm->handle_request(sock, msgType::textMsgSend, input);	
-				if(code == (uint8_t)userInput::RequestSymKey)										// request client B symmetric key
-					sm->handle_request(sock, msgType::symKeyReq, input);
-				if (code == (uint8_t)userInput::SendSymKey)											// send my symmetric key to client B
-					sm->handle_request(sock, msgType::symKeySend, input);
+				try {
+					std::cout << "Enter target username : ";
+					std::getline(std::cin, input);
+					if (code == (uint8_t)userInput::SendTxtMsg)											// send text message to client B
+						sm->handle_user_request(sock, msgType::textMsgSend, input);
+					if (code == (uint8_t)userInput::RequestSymKey)										// request client B symmetric key
+						sm->handle_user_request(sock, msgType::symKeyReq, input);
+					if (code == (uint8_t)userInput::SendSymKey)											// send my symmetric key to client B
+						sm->handle_user_request(sock, msgType::symKeySend, input);
+				}
+				catch (exception e) {
+					cout << e.what() << endl;
+				}
 			}
 			else {
 				cout << "Bad request code, please retry" << endl;

@@ -1,14 +1,62 @@
 #include "packetReciever.h"
-#include "misc.h"
 
-using namespace std;
+packetReciever::packetReciever() { rp = nullptr; }
 
-
-packetReciever::packetReciever() {}
+packetReciever::~packetReciever() {
+	if (rp != nullptr) delete rp;
+}
 
 void packetReciever::recieve(tcp::socket& sock)
 {
+	if (rp != nullptr) delete rp;		// start clean
 
+	boost::system::error_code ec;
+	size_t length;
+	// receive the header 
+	responseHeaderUnion rhu;
+	length = boost::asio::read(sock, boost::asio::buffer(rhu.buf, sizeof(responseHeaderUnion)), ec);
+	if (!ec || ec == boost::asio::error::eof) {}
+
+	if (rhu.h.code == (uint16_t)responseCode::registerSucc) {
+		char cid[CMN_SIZE];
+		length = boost::asio::read(sock, boost::asio::buffer(cid,CMN_SIZE), ec);
+		rp = new RegisterSuccessPacket(rhu.h.version, rhu.h.code, rhu.h.payload_size,cid);
+	}
+	else if (rhu.h.code == (uint16_t)responseCode::clientList) {
+		uint32_t numOfClients = rhu.h.payload_size / (CMN_SIZE + MAX_NAME_SIZE);
+		rp = new ClientListPacket(rhu.h.version, rhu.h.code, rhu.h.payload_size);
+		for (int i = 0; i < numOfClients; i++) {
+			char id[CMN_SIZE];
+			char name[MAX_NAME_SIZE];
+			length = boost::asio::read(sock, boost::asio::buffer(id, CMN_SIZE), ec);
+			length = boost::asio::read(sock, boost::asio::buffer(name, MAX_NAME_SIZE), ec);
+			ClientEntry ce(id, name);
+			((ClientListPacket&)rp).addEntry(ce);
+		}
+	}
+	else if (rhu.h.code == (uint16_t)responseCode::pubKey) {
+		// receive the payload 
+		char cid[CMN_SIZE];
+		char pub_key[PUB_KEY_LEN];
+		length = boost::asio::read(sock, boost::asio::buffer(cid, CMN_SIZE), ec);
+		length = boost::asio::read(sock, boost::asio::buffer(pub_key, PUB_KEY_LEN), ec);
+
+	}
+	else if (rhu.h.code == (uint16_t)responseCode::msgSent) {
+
+	}
+	else if (rhu.h.code == (uint16_t)responseCode::msgPull) {
+
+	}
+	else if (rhu.h.code == (uint16_t)responseCode::error) {
+
+	}
+	else {}
+}
+
+ResponsePacketHeader* packetReciever::getPacket() const
+{
+	return rp;
 }
 
 
@@ -70,9 +118,4 @@ payloadChunk* packetReciever::getPay() {
 	return payChunk;
 }
 
-packetReciever::~packetReciever() {
-	if (constHeader != nullptr) delete constHeader;
-	if (flexHeader != nullptr) delete flexHeader;
-	if (payChunk != nullptr) delete payChunk;
-}
 */

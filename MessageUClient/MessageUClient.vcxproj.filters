@@ -83,10 +83,19 @@
     <ClInclude Include="PubKeyPullPacket.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="ResponseHeader.h">
+    <ClInclude Include="ResponsePacketHeader.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="MsgSendPacket.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="RegisterSuccessPacket.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ClientListPacket.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ClientEntry.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

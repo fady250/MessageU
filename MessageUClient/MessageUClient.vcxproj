@@ -89,7 +89,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <LanguageStandard>stdcpp20</LanguageStandard>
+      <LanguageStandard>stdcpp17</LanguageStandard>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
     </ClCompile>
     <Link>
@@ -160,6 +160,8 @@
     <ClInclude Include="AESWrapper.h" />
     <ClInclude Include="Base64Wrapper.h" />
     <ClInclude Include="Client.h" />
+    <ClInclude Include="ClientEntry.h" />
+    <ClInclude Include="ClientListPacket.h" />
     <ClInclude Include="misc.h" />
     <ClInclude Include="MsgSendPacket.h" />
     <ClInclude Include="packetReciever.h" />
@@ -167,8 +169,9 @@
     <ClInclude Include="packetTransmitter.h" />
     <ClInclude Include="PubKeyPullPacket.h" />
     <ClInclude Include="RegisterPacket.h" />
+    <ClInclude Include="RegisterSuccessPacket.h" />
     <ClInclude Include="RequestPacketHeader.h" />
-    <ClInclude Include="ResponseHeader.h" />
+    <ClInclude Include="ResponsePacketHeader.h" />
     <ClInclude Include="RSAWrapper.h" />
     <ClInclude Include="SessionManager.h" />
   </ItemGroup>

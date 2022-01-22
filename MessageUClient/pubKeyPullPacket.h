@@ -2,11 +2,11 @@
 
 #include "requestPacketHeader.h"
 
-class PubKeyPullPacket : public requestPacketHeader {
+class PubKeyPullPacket : public RequestPacketHeader {
 private:
 	pubKeyPullPayload* p;
 public:
-	PubKeyPullPacket(char* my_id, uint16_t code, char* client_id) :requestPacketHeader(my_id, code) {
+	PubKeyPullPacket(const char* my_id, uint16_t code, char* client_id) :RequestPacketHeader(my_id, code) {
 		p = new pubKeyPullPayload;
 		memcpy(p->client_id, client_id, CMN_SIZE);
 	}

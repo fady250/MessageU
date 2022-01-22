@@ -2,11 +2,11 @@
 
 #include "requestPacketHeader.h"
 
-class MsgSendPacket : public requestPacketHeader {
+class MsgSendPacket : public RequestPacketHeader {
 private:
 	msgSendPayloadUnion* p;
 public:
-	MsgSendPacket(char* my_id, char* recepient_id, uint8_t type, uint32_t content_size, std::string content) :requestPacketHeader(my_id, (uint16_t)requestCode::sendMsg) {
+	MsgSendPacket(const char* my_id, char* recepient_id, uint8_t type, uint32_t content_size, std::string content) :RequestPacketHeader(my_id, (uint16_t)requestCode::sendMsg) {
 		// update payload size in the header
 		rh->h.payload_size = sizeof(msgSendPayload) + content_size ;
 		// TODO if its a file - will be sent in chunks - no need to allocate mem for file

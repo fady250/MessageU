@@ -4,7 +4,7 @@ packetTransmitter::packetTransmitter() {}
 
 packetTransmitter::~packetTransmitter() {}
 
-void packetTransmitter::send(tcp::socket& sock, requestPacketHeader* rp) {
+void packetTransmitter::send(tcp::socket& sock, RequestPacketHeader* rp) {
 	boost::system::error_code ec;
 	//send header 
 	boost::asio::write(sock, boost::asio::buffer(rp->getHeader()->buf), ec);					// for 1101/1104
@@ -22,39 +22,6 @@ void packetTransmitter::send(tcp::socket& sock, requestPacketHeader* rp) {
 	}
 		
 }
-
-
-//void packetTransmitter::send(tcp::socket& sock, requestPacketHeader* header) {											
-//	boost::system::error_code ec;
-//	// send header 
-//	boost::asio::write(sock, boost::asio::buffer(header->buf), ec);
-//}
-//
-//void packetTransmitter::send(tcp::socket& sock, requestPacketHeader* header, registerPayloadUnion* registerPay) {		
-//	boost::system::error_code ec;
-//	// send header 
-//	boost::asio::write(sock, boost::asio::buffer(header->buf), ec);
-//	// send payload
-//	boost::asio::write(sock, boost::asio::buffer(registerPay->buf), ec);
-//}
-//
-//void packetTransmitter::send(tcp::socket& sock, requestPacketHeader* header, pubKeyPullPayload* pay) {					// for 1102
-//	boost::system::error_code ec;
-//	// send header 
-//	boost::asio::write(sock, boost::asio::buffer(header->buf), ec);
-//	// send payload
-//	boost::asio::write(sock, boost::asio::buffer(pay->client_id), ec);
-//}
-//
-//void packetTransmitter::send(tcp::socket& sock, requestPacketHeader* header, msgSendPacketPayload* msgPay) {				// for 1103	
-//	// will use chunks when its a file , will send the whole when its text
-//	boost::system::error_code ec;
-//	// send header 
-//	boost::asio::write(sock, boost::asio::buffer(header->buf), ec);
-//	// send payload
-//	boost::asio::write(sock, boost::asio::buffer(msgPay->buf), ec);
-//}
-
 
 /*
 void packetTransmitter::send(tcp::socket& soc, packetReciever* pr) {

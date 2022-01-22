@@ -12,9 +12,11 @@ enum class requestCode { exit = 0, userRegister = 1100, clientsList = 1101, pull
 
 enum class msgType { symKeyReq = 1, symKeySend = 2, textMsgSend = 3, fileSend = 4 };	// relevant for requestCode sendMsg
 
+enum class responseCode { registerSucc = 2100, clientList = 2101, pubKey = 2102, msgSent = 2103, msgPull = 2104, error = 9000};
 
 class misc {
 public:
 	static std::string random_string(size_t length);
-	static std::string convertToString(char* a, int size);
+	static std::string convertToString(char* a, int size); 
+	static std::string convertNullTerminatedToString(char* a);
 };

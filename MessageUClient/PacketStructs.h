@@ -5,8 +5,9 @@
 #define ZERO				0
 #define CMN_SIZE			16		// 16 bytes		COMMON_SIZE - used in some of the many fields 
 #define MAX_NAME_SIZE		255
-#define PUB_KEY_SIZE		160
-#define REGISTER_PAY_SIZE	415
+#define PUB_KEY_LEN			160
+#define SYM_KEY_LEN			CMN_SIZE
+#define REGISTER_PAY_SIZE	MAX_NAME_SIZE + PUB_KEY_LEN // 415
 
 //#define PAY_LEN	        4		// payload size field
 #define CHUNK_SIZE		1024	// payload chunk size in bytes 
@@ -34,7 +35,7 @@ struct payloadChunk {							// used for message content in 1103 in case of file 
 
 struct registerPayload {
 	char name[MAX_NAME_SIZE];
-	char public_key[PUB_KEY_SIZE];
+	char public_key[PUB_KEY_LEN];
 };
 
 struct pubKeyPullPayload {				// no union for this struct

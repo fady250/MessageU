@@ -25,3 +25,14 @@ string misc::convertToString(char* a, int size)
 	}
 	return s;
 }
+
+std::string misc::convertNullTerminatedToString(char* a)
+{
+	int i = 0;
+	string s = "";
+	while (a[i] != '\0') {
+		s = s + a[i];
+		i++;
+	}
+	return s;
+}
