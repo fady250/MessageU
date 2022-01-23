@@ -4,17 +4,17 @@
 
 class PubKeyPullPacket : public RequestPacketHeader {
 private:
-	pubKeyPullPayload* p;
+	char* client_id;
 public:
-	PubKeyPullPacket(const char* my_id, uint16_t code, char* client_id) :RequestPacketHeader(my_id, code) {
-		p = new pubKeyPullPayload;
-		memcpy(p->client_id, client_id, CMN_SIZE);
+	PubKeyPullPacket(const char* my_id, uint16_t code, char* cid) :RequestPacketHeader(my_id, code) {
+		client_id = new char[CMN_SIZE];
+		memcpy(client_id, cid, CMN_SIZE);
 	}
 
-	pubKeyPullPayload* getPay() const {
-		return p;
+	char* getPay() const {
+		return client_id;
 	}
 	~PubKeyPullPacket() {
-		delete p;
+		delete client_id;
 	}
 };

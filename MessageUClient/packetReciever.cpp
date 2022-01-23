@@ -20,11 +20,11 @@ void packetReciever::recieve(tcp::socket& sock)
 	if (rhu.h.code == (uint16_t)responseCode::registerSucc) {
 		char cid[CMN_SIZE];
 		length = boost::asio::read(sock, boost::asio::buffer(cid,CMN_SIZE), ec);
-		rp = new RegisterSuccessPacket(rhu.h.version, rhu.h.code, rhu.h.payload_size,cid);
+		rp = new RegisterSuccessPacket(&rhu,cid);
 	}
 	else if (rhu.h.code == (uint16_t)responseCode::clientList) {
 		uint32_t numOfClients = rhu.h.payload_size / (CMN_SIZE + MAX_NAME_SIZE);
-		rp = new ClientListPacket(rhu.h.version, rhu.h.code, rhu.h.payload_size);
+		rp = new ClientListPacket(&rhu);
 		for (int i = 0; i < numOfClients; i++) {
 			char id[CMN_SIZE];
 			char name[MAX_NAME_SIZE];
@@ -40,18 +40,42 @@ void packetReciever::recieve(tcp::socket& sock)
 		char pub_key[PUB_KEY_LEN];
 		length = boost::asio::read(sock, boost::asio::buffer(cid, CMN_SIZE), ec);
 		length = boost::asio::read(sock, boost::asio::buffer(pub_key, PUB_KEY_LEN), ec);
-
+		rp = new PubKeyResponsePacket(&rhu,cid,pub_key);
 	}
 	else if (rhu.h.code == (uint16_t)responseCode::msgSent) {
-
+		// TODO what do i need to do with msg id ? 
+		// receive the payload 
+		char cid[CMN_SIZE];
+		char mid[MSG_ID_LEN];
+		length = boost::asio::read(sock, boost::asio::buffer(cid, CMN_SIZE), ec);
+		length = boost::asio::read(sock, boost::asio::buffer(mid, MSG_ID_LEN), ec);
+		// TODO do we need to print something here ? does it worth a new class packet ?
+		//// WE HAVE THE HEADER READY
 	}
 	else if (rhu.h.code == (uint16_t)responseCode::msgPull) {
-
+		uint32_t pay_size = rhu.h.payload_size;
+		msgPullPayloadUnion mppu;
+		// create packet
+		rp = new MessagePacket(&rhu);
+		while (pay_size > 0) {
+			// receive the structure that is before the variable lenght message content
+			length = boost::asio::read(sock, boost::asio::buffer(mppu.buf, CMN_SIZE), ec);
+			MsgEntry e(&mppu);
+			// receive the message 
+			char* msg = new char[mppu.p.msg_size];
+			length = boost::asio::read(sock, boost::asio::buffer(msg, mppu.p.msg_size), ec);
+			pay_size -= (mppu.p.msg_size + sizeof(msgPullPayloadUnion));
+			e.set_msg(msg);
+			((MessagePacket&)rp).addEntry(e);
+		}
 	}
 	else if (rhu.h.code == (uint16_t)responseCode::error) {
-
+		// nothing to receive 
+		// WE HAVE THE HEADER READY
+		// TODO where are we printing errror msg to the user
 	}
-	else {}
+	else {// nothing to receive
+	}
 }
 
 ResponsePacketHeader* packetReciever::getPacket() const

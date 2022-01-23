@@ -17,7 +17,7 @@ void SessionManager::handle_user_request(tcp::socket& sock, requestCode rc, stri
 	if (rc == requestCode::clientsList || rc == requestCode::pullMsgs)
 		request = new RequestPacketHeader(get_my_id(), (uint16_t)rc);		// header only 
 	if (rc == requestCode::pullClientPubKey) {
-		char* cid = get_recepient_id(input);
+		char* cid = get_recepient_id_by_name(input);
 		if (!cid) {
 			throw exception("The user you try to send to doesnt exist !");
 		}
@@ -34,7 +34,7 @@ void SessionManager::handle_user_request(tcp::socket& sock, requestCode rc, stri
 void SessionManager::handle_user_request(tcp::socket& sock, msgType mt, string input) {
 
 	// get the client id from the list of available clients 
-	char* recepient_id = get_recepient_id(input);
+	char* recepient_id = get_recepient_id_by_name(input);
 	if (!recepient_id) {
 		throw exception("The user you try to send to doesnt exist !");
 	}
@@ -64,7 +64,9 @@ void SessionManager::handle_user_request(tcp::socket& sock, msgType mt, string i
 void SessionManager::handle_server_response(packetReciever* pr, RequestPacketHeader* request)
 {
 	std::ofstream outfilex;
-	vector<ClientEntry>* vec;
+	vector<ClientEntry>* client_vec;
+	vector<MsgEntry>* msg_vec;
+	string cid, name;
 	ResponsePacketHeader* response = pr->getPacket();
 
 	switch (response->getHeader()->h.code)
@@ -82,21 +84,38 @@ void SessionManager::handle_server_response(packetReciever* pr, RequestPacketHea
 
 	case((uint16_t)responseCode::clientList):
 		clients.clear();	// in case get the list again
-		vec = ((ClientListPacket&)response).getPay();
+		client_vec = ((ClientListPacket&)response).getPay();
 		cout << "List of Clients : " << endl;
-		for (int i = 0; i < vec->size(); i++) {
-			clients.push_back(vec->at(i));		// TODO CC should be used here 
-			cout << vec->at(i).getName() << endl;
+		for (int i = 0; i < client_vec->size(); i++) {
+			clients.push_back(client_vec->at(i));		// TODO CC should be used here 
+			cout << client_vec->at(i).getName() << endl;
 		}
 		break;
 
 	case((uint16_t)responseCode::pubKey):
+		// add the info to the client entry
+		cid = misc::convertToString(((PubKeyResponsePacket&)response).get_id(),CMN_SIZE);
+		for (ClientEntry e : clients) {
+			if (misc::convertToString(e.getId(),CMN_SIZE) == cid) {
+				// update the entry in the list with the public key of that client that we just received from server
+				e.set_pub_key(((PubKeyResponsePacket&)response).get_pub_key());		
+			}
+		}
 		break;
 
 	case((uint16_t)responseCode::msgSent):
+		cout << "message was sent successfully ( may not be read yet )" << endl;
 		break;
 
 	case((uint16_t)responseCode::msgPull):
+		msg_vec = ((MessagePacket&)response).getPay();
+		for (int i = 0; i < msg_vec->size(); i++) {
+			name = get_name_by_id(msg_vec->at(i).getPayHeader()->p.client_id);
+			cout << "From: " << name << "\nContent: " << endl;
+			// decrypt 
+			cout << msg_vec->at(i).getMsg() << endl;
+			cout << "-----<EOM>------" << endl;
+		}
 		break;
 
 	case((uint16_t)responseCode::error):
@@ -123,7 +142,7 @@ const char* SessionManager::get_my_id() const
 	}
 }
 
-char* SessionManager::get_recepient_id(string name) const
+char* SessionManager::get_recepient_id_by_name(string name) const
 {
 	for (ClientEntry e : clients) {
 
@@ -131,7 +150,18 @@ char* SessionManager::get_recepient_id(string name) const
 			return e.getId();
 		}
 	}
-	return nullptr;
+	return nullptr;	// TODO throw ?
+}
+
+string SessionManager::get_name_by_id(char* id) const
+{
+	for (ClientEntry e : clients) {
+		string s(id);
+		if (misc::convertNullTerminatedToString(e.getId()) == s) {
+			return string(e.getName());
+		}
+	}
+	return string("");	// TODO throw 
 }
 
 SessionManager::~SessionManager() {

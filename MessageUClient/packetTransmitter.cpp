@@ -13,7 +13,9 @@ void packetTransmitter::send(tcp::socket& sock, RequestPacketHeader* rp) {
 		boost::asio::write(sock, boost::asio::buffer(((RegisterPacket&)rp).getPay()->buf), ec);	// for 1100
 	}
 	else if (rp->getHeader()->h.code == (uint16_t)requestCode::pullClientPubKey) {
-		boost::asio::write(sock, boost::asio::buffer(((PubKeyPullPacket&)rp).getPay()->client_id)); // for 1102
+		char buf[CMN_SIZE];
+		memcpy(buf, ((PubKeyPullPacket&)rp).getPay(), CMN_SIZE);
+		boost::asio::write(sock, boost::asio::buffer(buf)); // for 1102
 	}
 	else {   //requestCode::sendMsg  for 1103
 		// if type is file - handle accordingly 

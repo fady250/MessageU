@@ -4,7 +4,9 @@
 #include "misc.h"
 #include "ResponsePacketHeader.h"
 #include "RegisterSuccessPacket.h"
+#include "PubKeyResponsePacket.h"
 #include "ClientListPacket.h"
+#include "MessagePacket.h"
 
 
 using boost::asio::ip::tcp;

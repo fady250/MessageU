@@ -162,12 +162,15 @@
     <ClInclude Include="Client.h" />
     <ClInclude Include="ClientEntry.h" />
     <ClInclude Include="ClientListPacket.h" />
+    <ClInclude Include="MessagePacket.h" />
     <ClInclude Include="misc.h" />
+    <ClInclude Include="MsgEntry.h" />
     <ClInclude Include="MsgSendPacket.h" />
     <ClInclude Include="packetReciever.h" />
     <ClInclude Include="PacketStructs.h" />
     <ClInclude Include="packetTransmitter.h" />
     <ClInclude Include="PubKeyPullPacket.h" />
+    <ClInclude Include="PubKeyResponsePacket.h" />
     <ClInclude Include="RegisterPacket.h" />
     <ClInclude Include="RegisterSuccessPacket.h" />
     <ClInclude Include="RequestPacketHeader.h" />

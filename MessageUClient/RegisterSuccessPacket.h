@@ -6,7 +6,7 @@ class RegisterSuccessPacket : public ResponsePacketHeader {
 private:
 	char* client_id;
 public:
-	RegisterSuccessPacket(uint8_t version, uint16_t code, uint32_t payload_size, char* cid) :ResponsePacketHeader(version, code, payload_size) {
+	RegisterSuccessPacket(responseHeaderUnion* rh, char* cid) :ResponsePacketHeader(rh->h.version, rh->h.code, rh->h.payload_size) {
 		client_id = new char[CMN_SIZE];
 		memcpy(client_id, cid, CMN_SIZE);
 	}

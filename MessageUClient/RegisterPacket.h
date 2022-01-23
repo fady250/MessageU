@@ -1,6 +1,6 @@
 #pragma once
 
-#include "requestPacketHeader.h"
+#include "RequestPacketHeader.h"
 
 class RegisterPacket : public RequestPacketHeader {
 private:

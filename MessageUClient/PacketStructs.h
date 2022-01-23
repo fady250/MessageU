@@ -9,7 +9,7 @@
 #define SYM_KEY_LEN			CMN_SIZE
 #define REGISTER_PAY_SIZE	MAX_NAME_SIZE + PUB_KEY_LEN // 415
 
-//#define PAY_LEN	        4		// payload size field
+#define MSG_ID_LEN	    4		// 
 #define CHUNK_SIZE		1024	// payload chunk size in bytes 
 
 #pragma pack(push,1)
@@ -38,15 +38,18 @@ struct registerPayload {
 	char public_key[PUB_KEY_LEN];
 };
 
-struct pubKeyPullPayload {				// no union for this struct
-	char client_id[CMN_SIZE];
-};
-
 struct msgSendPayload {
 	char recepient_id[CMN_SIZE];
 	uint8_t msg_type;
 	uint32_t content_size;
-	char msg_content[];			// flexible	// sizeof(MsgSendPayload) = 6 , however this memory is allocated Continuously
+	char msg_content[];			// flexible	// sizeof(MsgSendPayload) , however this memory is allocated Continuously
+};
+
+struct msgPullPayload {
+	char client_id[CMN_SIZE];
+	uint32_t msg_id;
+	uint8_t msg_type;
+	uint32_t msg_size;
 };
 
 #pragma pack(pop)
@@ -79,3 +82,8 @@ union msgSendPayloadUnion
 	char buf[sizeof(msgSendPayload)];
 };
 
+union msgPullPayloadUnion
+{
+	msgPullPayload p;
+	char buf[sizeof(msgPullPayload)];
+};
