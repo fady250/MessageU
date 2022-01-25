@@ -1,0 +1,34 @@
+#pragma once
+
+class MsgEntry {
+private:
+	msgPullPayloadUnion* mppu = nullptr;
+	char* message_content = nullptr;
+public:
+	MsgEntry() {
+		mppu = new msgPullPayloadUnion;
+	}
+	MsgEntry(msgPullPayloadUnion* m) : MsgEntry() {
+		memcpy(mppu->buf, m->buf, sizeof(msgPullPayloadUnion));
+	}
+	MsgEntry(const MsgEntry& me) : MsgEntry(me.getPayHeader()) {			// the first ctor will build the union and copy it 
+		//build and copy the message content
+		set_msg(me.getMsg());
+	}
+	msgPullPayloadUnion* getPayHeader()const {
+		return mppu;
+	}
+	char* getMsg()const {
+		return message_content;
+	}
+
+	void set_msg(char* msg) {
+		message_content = new char[mppu->p.msg_size];
+		memcpy(message_content, msg, mppu->p.msg_size);
+	}
+
+	~MsgEntry() {
+		delete mppu;
+		delete message_content;
+	}
+};

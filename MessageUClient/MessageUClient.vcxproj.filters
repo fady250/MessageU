@@ -13,6 +13,12 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
+    <Filter Include="Header Files\RequestPackets">
+      <UniqueIdentifier>{5e701cc6-2c2e-4f13-9a24-9f3279ed5e1d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\ResponsePackets">
+      <UniqueIdentifier>{0b42937d-8aa2-4b44-b08e-2fec58ee6ae4}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="MessageUClient.cpp">
@@ -47,7 +53,7 @@
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Packets.h">
+    <ClInclude Include="PacketStructs.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Client.h">
@@ -72,6 +78,39 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="SessionManager.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ClientEntry.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="RequestPacketHeader.h">
+      <Filter>Header Files\RequestPackets</Filter>
+    </ClInclude>
+    <ClInclude Include="RegisterPacket.h">
+      <Filter>Header Files\RequestPackets</Filter>
+    </ClInclude>
+    <ClInclude Include="ClientListPacket.h">
+      <Filter>Header Files\ResponsePackets</Filter>
+    </ClInclude>
+    <ClInclude Include="ResponsePacketHeader.h">
+      <Filter>Header Files\ResponsePackets</Filter>
+    </ClInclude>
+    <ClInclude Include="RegisterSuccessPacket.h">
+      <Filter>Header Files\ResponsePackets</Filter>
+    </ClInclude>
+    <ClInclude Include="PubKeyPullPacket.h">
+      <Filter>Header Files\RequestPackets</Filter>
+    </ClInclude>
+    <ClInclude Include="PubKeyResponsePacket.h">
+      <Filter>Header Files\ResponsePackets</Filter>
+    </ClInclude>
+    <ClInclude Include="MsgSendPacket.h">
+      <Filter>Header Files\RequestPackets</Filter>
+    </ClInclude>
+    <ClInclude Include="MessagePacket.h">
+      <Filter>Header Files\ResponsePackets</Filter>
+    </ClInclude>
+    <ClInclude Include="MsgEntry.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

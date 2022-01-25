@@ -6,17 +6,17 @@
 #define TXT		4
 #define RANDOM_NAME_LEN 32
 
-enum class operation { backup = 100, recover = 200, delete_file = 201, list_files = 202 };
-enum class 
-	status { succ_restored = 210, 
-	succ_list = 211, 
-	succ_backup_delete = 212, 
-	err_doesnt_exist = 1001, 
-	err_no_files = 1002, 
-	error = 1003 };
+enum class userInput {Register = 110, RequestList = 120, RequestpubKey = 130, Requestmsgs = 140, SendTxtMsg = 150, RequestSymKey = 151, SendSymKey = 152, exit = 0};
+
+enum class requestCode { exit = 0, userRegister = 1100, clientsList = 1101, pullClientPubKey = 1102, sendMsg = 1103, pullMsgs = 1104 };
+
+enum class msgType { symKeyReq = 1, symKeySend = 2, textMsgSend = 3, fileSend = 4 };	// relevant for requestCode sendMsg
+
+enum class responseCode { registerSucc = 2100, clientList = 2101, pubKey = 2102, msgSent = 2103, msgPull = 2104, error = 9000};
 
 class misc {
 public:
 	static std::string random_string(size_t length);
-	static std::string convertToString(char* a, int size);
+	static std::string convertToString(char* a, int size); 
+	static std::string convertNullTerminatedToString(char* a);
 };

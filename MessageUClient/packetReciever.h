@@ -1,24 +1,24 @@
 #pragma once
 
 #include <boost/asio.hpp>
-#include "packets.h"
-#include <fstream>
+#include "misc.h"
+#include "ResponsePacketHeader.h"
+#include "RegisterSuccessPacket.h"
+#include "PubKeyResponsePacket.h"
+#include "ClientListPacket.h"
+#include "MessagePacket.h"
+
+
 using boost::asio::ip::tcp;
 
-
-
 class packetReciever {
-private :
-	//requestPacketHeaderConst* constHeader = nullptr;
-	//PacketHeaderFlex* flexHeader = nullptr;
-	//payloadChunk* payChunk = nullptr;
+private:
+	ResponsePacketHeader* rp;
 public:
-	//packetReciever();
-	//void receiveHeader(tcp::socket& soc);
-	//uint32_t receivePaySize(tcp::socket& soc);
+	packetReciever();
+	void recieve(tcp::socket& sock);
+	ResponsePacketHeader* getPacket() const;
 	//uint32_t receivePayChunk(tcp::socket& soc, uint32_t bytes_left);	// returns how many bytes received 
-	//requestPacketHeaderConst* getConstHeader();		// pointer for the buffers
-	//PacketHeaderFlex* getFlexHeader();		// pointer for the buffers
 	//payloadChunk* getPay();							// pointer for the buffers
-	//~packetReciever();
+	~packetReciever();
 };

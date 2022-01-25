@@ -1,21 +1,31 @@
 #include "packetTransmitter.h"
 
+packetTransmitter::packetTransmitter() {}
+
+packetTransmitter::~packetTransmitter() {}
+
+void packetTransmitter::send(tcp::socket& sock, RequestPacketHeader* rp) {
+	boost::system::error_code ec;
+	//send header 
+	boost::asio::write(sock, boost::asio::buffer(rp->getHeader()->buf), ec);					// for 1101/1104
+	
+	if (rp->getHeader()->h.code == (uint16_t)requestCode::userRegister) {
+		boost::asio::write(sock, boost::asio::buffer(((RegisterPacket&)rp).getPay()->buf), ec);	// for 1100
+	}
+	else if (rp->getHeader()->h.code == (uint16_t)requestCode::pullClientPubKey) {
+		char buf[CMN_SIZE];
+		memcpy(buf, ((PubKeyPullPacket&)rp).getPay(), CMN_SIZE);
+		boost::asio::write(sock, boost::asio::buffer(buf)); // for 1102
+	}
+	else {   //requestCode::sendMsg  for 1103
+		// if type is file - handle accordingly 
+
+		boost::asio::write(sock, boost::asio::buffer(((MsgSendPacket&)rp).getPay()->buf), ec);
+	}
+		
+}
+
 /*
-packetTransmitter::packetTransmitter() {
-	constHeader = new responsePacketHeaderConst;	// the rest of the packet will be dynamically allocated according to sizes
-}
-
-void packetTransmitter::buildConstHeader(enum class status st) {
-	constHeader->hc.version = VERSION;
-	constHeader->hc.status = (uint16_t)st;
-}
-
-void packetTransmitter::buildFlexHeader(std::string st,uint16_t size) {
-	flexHeader = (PacketHeaderFlex*)new char[sizeof(PacketHeaderFlex) + sizeof(char)*size];
-	flexHeader->hf.namelen = size;
-	memcpy(flexHeader->hf.file_name, st.c_str(),size);
-}
-
 void packetTransmitter::send(tcp::socket& soc, packetReciever* pr) {
 	boost::system::error_code ec;
 	enum class status st = (status)constHeader->hc.status;
@@ -62,11 +72,5 @@ void packetTransmitter::send(tcp::socket& soc, packetReciever* pr) {
 	}
 	if (pr->getConstHeader()->hc.op == (uint16_t)operation::list_files)
 		std::filesystem::remove(misc::convertToString(flexHeader->hf.file_name,flexHeader->hf.namelen));	// delete this text file - server doesnt need it
-}
-
-packetTransmitter::~packetTransmitter() {
-	if (constHeader != nullptr) delete constHeader;
-	if (flexHeader != nullptr) delete flexHeader;
-	if (payChunk != nullptr) delete payChunk;
 }
 */
