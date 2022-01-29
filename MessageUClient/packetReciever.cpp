@@ -31,7 +31,7 @@ void packetReciever::recieve(tcp::socket& sock)
 			length = boost::asio::read(sock, boost::asio::buffer(id, CMN_SIZE), ec);
 			length = boost::asio::read(sock, boost::asio::buffer(name, MAX_NAME_SIZE), ec);
 			ClientEntry ce(id, name);
-			((ClientListPacket&)rp).addEntry(ce);
+			((ClientListPacket*)rp)->addEntry(ce);
 		}
 	}
 	else if (rhu.h.code == (uint16_t)responseCode::pubKey) {
@@ -66,7 +66,7 @@ void packetReciever::recieve(tcp::socket& sock)
 			length = boost::asio::read(sock, boost::asio::buffer(msg, mppu.p.msg_size), ec);
 			pay_size -= (mppu.p.msg_size + sizeof(msgPullPayloadUnion));
 			e.set_msg(msg);
-			((MessagePacket&)rp).addEntry(e);
+			((MessagePacket*)rp)->addEntry(e);
 		}
 	}
 	else if (rhu.h.code == (uint16_t)responseCode::error) {
@@ -75,6 +75,7 @@ void packetReciever::recieve(tcp::socket& sock)
 		// TODO where are we printing errror msg to the user
 	}
 	else {// nothing to receive
+		// empty rhu , throw exception
 	}
 }
 

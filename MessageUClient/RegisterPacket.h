@@ -14,6 +14,8 @@ public:
 		memcpy(p->h.name, name.c_str(), s);
 		p->buf[s] = '\0';
 		memcpy(p->h.public_key, pubkey, PUB_KEY_LEN);
+		// TODO clean 
+		std::cout << "public key that was generated and sent : "  << std::endl << pubkey << std::endl;
 	}
 	registerPayloadUnion* getPay() const {
 		return p;

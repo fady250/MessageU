@@ -7,20 +7,20 @@ packetTransmitter::~packetTransmitter() {}
 void packetTransmitter::send(tcp::socket& sock, RequestPacketHeader* rp) {
 	boost::system::error_code ec;
 	//send header 
-	boost::asio::write(sock, boost::asio::buffer(rp->getHeader()->buf), ec);					// for 1101/1104
-	
+	boost::asio::write(sock, boost::asio::buffer(rp->getHeader()->buf,sizeof(requestHeaderUnion)), ec);					// for 1101/1104
+
 	if (rp->getHeader()->h.code == (uint16_t)requestCode::userRegister) {
-		boost::asio::write(sock, boost::asio::buffer(((RegisterPacket&)rp).getPay()->buf), ec);	// for 1100
+		boost::asio::write(sock, boost::asio::buffer(((RegisterPacket*)rp)->getPay()->buf, sizeof(registerPayloadUnion)), ec);	// for 1100
 	}
 	else if (rp->getHeader()->h.code == (uint16_t)requestCode::pullClientPubKey) {
 		char buf[CMN_SIZE];
-		memcpy(buf, ((PubKeyPullPacket&)rp).getPay(), CMN_SIZE);
+		memcpy(buf, ((PubKeyPullPacket*)rp)->getPay(), CMN_SIZE);
 		boost::asio::write(sock, boost::asio::buffer(buf)); // for 1102
 	}
 	else {   //requestCode::sendMsg  for 1103
 		// if type is file - handle accordingly 
 
-		boost::asio::write(sock, boost::asio::buffer(((MsgSendPacket&)rp).getPay()->buf), ec);
+		boost::asio::write(sock, boost::asio::buffer(((MsgSendPacket*)rp)->getPay()->buf), ec);
 	}
 		
 }

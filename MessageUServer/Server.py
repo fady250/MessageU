@@ -60,7 +60,7 @@ class Server(object):
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
             s.bind(('', self.__PORT))
             s.listen(100)
-            s.setblocking(False)
+            #s.setblocking(False)
             self.__sel.register(s, selectors.EVENT_READ, self.accept)
             while True:
                 events = self.__sel.select()
@@ -71,14 +71,16 @@ class Server(object):
     def accept(self, sock, mask):
         conn, addr = sock.accept()
         print('accepted', conn, 'from', addr)
-        conn.setblocking(False)
+        #conn.setblocking(False)
         self.__sel.register(conn, selectors.EVENT_READ, self.handle_client_request)
 
     def handle_client_request(self, conn, mask):
         data = conn.recv(REQUEST_HEADER_SIZE)  # receive the header
         if data:
-            cid1, cid2, ver, code, pay_size = struct.unpack('<2dBHI', data)
-            from_cid = cid1 + cid2  # TODO verify if not the opposite way ?
+            #cid1, cid2, ver, code, pay_size = struct.unpack('<2dBHI', data)
+            cid = struct.unpack('<' + 16 * 'B', data[:16])
+            ver, code, pay_size = struct.unpack_from('<BHI', data, 16)
+            #from_cid = cid1 + cid2  # TODO verify if not the opposite way ?
             if code == RequestCode.userRegister.value:
                 # receive the rest of the packet
                 data = conn.recv(NAME_MAX_SIZE)
@@ -98,17 +100,19 @@ class Server(object):
                         return
                 # add new entry
                 uid = uuid.uuid4()
-                print(uid)
-                print(uid.__str__())
+                print(uid)      #TODO clean
                 print(uid.hex)
                 print(uid.bytes)
-                self.__clients.append(
-                    ClientEntry.ClientEntry(uid, name, pub_key))  # TODO do we need to remove the dash ?
+                uid_bytes = bytearray(uid.bytes)
+                print(uid_bytes)
+                print(tuple(uid_bytes))
+                self.__clients.append(ClientEntry.ClientEntry(tuple(uid_bytes), name, pub_key))
                 frmt = '<BHI' + CLIENT_ID_LEN * 'B'
                 buf_size_in_bytes = struct.calcsize(frmt)  # TODO need to send big endian ?
                 buf = ctypes.create_string_buffer(buf_size_in_bytes)
-                client_id = str.encode(uid.__str__())  # move to byte representation
-                values = (VERSION, ResponseCode.registerSuccess.value, CLIENT_ID_LEN, *client_id)
+                #client_id = str.encode(uid.bytes)  # move to byte representation
+                #values = (VERSION, ResponseCode.registerSuccess.value, CLIENT_ID_LEN, *client_id)
+                values = (VERSION, ResponseCode.registerSuccess.value, CLIENT_ID_LEN, *(tuple(uid_bytes)))
                 struct.pack_into(frmt, buf, 0, *values)
                 conn.sendall(buf)
 
@@ -119,27 +123,32 @@ class Server(object):
                 values = (
                     VERSION, ResponseCode.clientList.value, self.__clients.__len__() * (NAME_MAX_SIZE + CLIENT_ID_LEN))
                 for entry in self.__clients:
-                    values += str.encode(entry.ID) + str.encode(entry.UserName)
+                    print (values)
+                    print (entry.ID)
+                    print (entry.UserName)
+                    values += entry.ID + entry.UserName
                 struct.pack_into(frmt, buf, 0, *values)
                 conn.sendall(buf)
 
             elif code == RequestCode.pullClientPubKey.value:
                 # receive the wanted client id
                 data = conn.recv(CLIENT_ID_LEN)
-                cid = struct.unpack('<' + CLIENT_ID_LEN * 'B', data)
+                requested_cid = struct.unpack('<' + CLIENT_ID_LEN * 'B', data)
+                print("requested cid --========================---- ")
+                print(requested_cid)  # TODO clean
                 # check if the user name exists in the clients
-                public_key = 0
+                public_key = ()
                 for entry in self.__clients:
-                    if entry.ID == cid:
+                    if entry.ID == requested_cid:
                         public_key = entry.PubKey
-                if public_key == 0:
+                if public_key == ():
                     # TODO error handle
                     pass
-
+                print("public key to be returned - " + str(public_key))  # TODO clean
                 frmt = '<BHI' + (CLIENT_ID_LEN + PUB_KEY_SIZE) * 'B'
                 buf_size_in_bytes = struct.calcsize(frmt)  # TODO need to send big endian ?
                 buf = ctypes.create_string_buffer(buf_size_in_bytes)
-                values = (VERSION, ResponseCode.pubKey.value, CLIENT_ID_LEN + PUB_KEY_SIZE, *(str.encode(public_key)))
+                values = (VERSION, ResponseCode.pubKey.value, CLIENT_ID_LEN + PUB_KEY_SIZE, *(requested_cid + public_key))
                 struct.pack_into(frmt, buf, 0, *values)
                 conn.sendall(buf)
 
