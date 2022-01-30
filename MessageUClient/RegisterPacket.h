@@ -15,7 +15,10 @@ public:
 		p->buf[s] = '\0';
 		memcpy(p->h.public_key, pubkey, PUB_KEY_LEN);
 		// TODO clean 
-		std::cout << "public key that was generated and sent : "  << std::endl << pubkey << std::endl;
+		std::string pubk(pubkey, PUB_KEY_LEN);
+		std::cout << "public key that was generated and sent : "  << std::endl;
+		for (int i = 0; i < pubk.size(); i++)
+			std::cout << std::hex << std::setfill('0') << std::setw(2) << ((int)pubk[i] & 0xff);
 	}
 	registerPayloadUnion* getPay() const {
 		return p;

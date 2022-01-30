@@ -43,6 +43,7 @@ void packetReciever::recieve(tcp::socket& sock)
 		rp = new PubKeyResponsePacket(&rhu,cid,pub_key);
 	}
 	else if (rhu.h.code == (uint16_t)responseCode::msgSent) {
+		// TODO crate rp !!!
 		// TODO what do i need to do with msg id ? 
 		// receive the payload 
 		char cid[CMN_SIZE];

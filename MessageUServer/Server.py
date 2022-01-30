@@ -60,7 +60,7 @@ class Server(object):
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
             s.bind(('', self.__PORT))
             s.listen(100)
-            #s.setblocking(False)
+            # s.setblocking(False)
             self.__sel.register(s, selectors.EVENT_READ, self.accept)
             while True:
                 events = self.__sel.select()
@@ -71,16 +71,15 @@ class Server(object):
     def accept(self, sock, mask):
         conn, addr = sock.accept()
         print('accepted', conn, 'from', addr)
-        #conn.setblocking(False)
+        # conn.setblocking(False)
         self.__sel.register(conn, selectors.EVENT_READ, self.handle_client_request)
 
     def handle_client_request(self, conn, mask):
         data = conn.recv(REQUEST_HEADER_SIZE)  # receive the header
         if data:
-            #cid1, cid2, ver, code, pay_size = struct.unpack('<2dBHI', data)
-            cid = struct.unpack('<' + 16 * 'B', data[:16])
+            # cid1, cid2, ver, code, pay_size = struct.unpack('<2dBHI', data)
+            source_cid = struct.unpack('<' + 16 * 'B', data[:16])
             ver, code, pay_size = struct.unpack_from('<BHI', data, 16)
-            #from_cid = cid1 + cid2  # TODO verify if not the opposite way ?
             if code == RequestCode.userRegister.value:
                 # receive the rest of the packet
                 data = conn.recv(NAME_MAX_SIZE)
@@ -100,18 +99,18 @@ class Server(object):
                         return
                 # add new entry
                 uid = uuid.uuid4()
-                print(uid)      #TODO clean
+                print(uid)  # TODO clean
                 print(uid.hex)
                 print(uid.bytes)
-                uid_bytes = bytearray(uid.bytes)
+                uid_bytes = bytearray(uid.bytes)        # todo why need byte array ?
                 print(uid_bytes)
                 print(tuple(uid_bytes))
                 self.__clients.append(ClientEntry.ClientEntry(tuple(uid_bytes), name, pub_key))
                 frmt = '<BHI' + CLIENT_ID_LEN * 'B'
                 buf_size_in_bytes = struct.calcsize(frmt)  # TODO need to send big endian ?
                 buf = ctypes.create_string_buffer(buf_size_in_bytes)
-                #client_id = str.encode(uid.bytes)  # move to byte representation
-                #values = (VERSION, ResponseCode.registerSuccess.value, CLIENT_ID_LEN, *client_id)
+                # client_id = str.encode(uid.bytes)  # move to byte representation
+                # values = (VERSION, ResponseCode.registerSuccess.value, CLIENT_ID_LEN, *client_id)
                 values = (VERSION, ResponseCode.registerSuccess.value, CLIENT_ID_LEN, *(tuple(uid_bytes)))
                 struct.pack_into(frmt, buf, 0, *values)
                 conn.sendall(buf)
@@ -123,9 +122,9 @@ class Server(object):
                 values = (
                     VERSION, ResponseCode.clientList.value, self.__clients.__len__() * (NAME_MAX_SIZE + CLIENT_ID_LEN))
                 for entry in self.__clients:
-                    print (values)
-                    print (entry.ID)
-                    print (entry.UserName)
+                    print(values)
+                    print(entry.ID)
+                    print(entry.UserName)
                     values += entry.ID + entry.UserName
                 struct.pack_into(frmt, buf, 0, *values)
                 conn.sendall(buf)
@@ -148,42 +147,47 @@ class Server(object):
                 frmt = '<BHI' + (CLIENT_ID_LEN + PUB_KEY_SIZE) * 'B'
                 buf_size_in_bytes = struct.calcsize(frmt)  # TODO need to send big endian ?
                 buf = ctypes.create_string_buffer(buf_size_in_bytes)
-                values = (VERSION, ResponseCode.pubKey.value, CLIENT_ID_LEN + PUB_KEY_SIZE, *(requested_cid + public_key))
+                values = (
+                    VERSION, ResponseCode.pubKey.value, CLIENT_ID_LEN + PUB_KEY_SIZE, *(requested_cid + public_key))
                 struct.pack_into(frmt, buf, 0, *values)
                 conn.sendall(buf)
 
-            elif code == RequestCode.sendMsg:
+            elif code == RequestCode.sendMsg.value:  # TODO fix the below requests to the same as above
                 # receive the rest of the packet
                 data = conn.recv(CLIENT_ID_LEN + MESSAGE_TYPE_LEN + CONTENT_SIZE_LEN)
-                cid1, cid2, msg_type, content_size = struct.unpack('<2dBI', data)
-                to_cid = cid1 + cid2
+                destination_cid = struct.unpack('<' + 16 * 'B', data[:16])
+                msg_type, content_size = struct.unpack_from('<BI', data, 16)
+
                 data = conn.recv(content_size)
                 # data.decode() # TODO shouold this be saved decoded ?
-                self.__messages.append(MessageEntry.MessageEntry(self.__index, to_cid, from_cid, msg_type, data))
+                self.__messages.append(
+                    MessageEntry.MessageEntry(self.__index, destination_cid, source_cid, msg_type, data))
 
                 frmt = '<BHI' + (CLIENT_ID_LEN + MESSAGE_ID_LEN) * 'B'
                 buf_size_in_bytes = struct.calcsize(frmt)  # TODO need to send big endian ?
                 buf = ctypes.create_string_buffer(buf_size_in_bytes)
+                index_in_bytes = struct.pack("I", self.__index)
                 values = (VERSION, ResponseCode.msgSent.value, CLIENT_ID_LEN + MESSAGE_ID_LEN,
-                          *(str.encode(to_cid) + str.encode(str(self.__index))))
+                          *(destination_cid + tuple(index_in_bytes)))   #TODO this is still 23 in the tuple while the buffer size is 27 ??
                 self.__index += 1
                 struct.pack_into(frmt, buf, 0, *values)
                 conn.sendall(buf)
 
-            elif code == RequestCode.pullMsgs:
+            elif code == RequestCode.pullMsgs.value:
                 frmt = '<BHI'
                 values = [VERSION, ResponseCode.clientList.value, ZERO]
                 msg_list = []
                 for msg in self.__messages:
-                    if msg.ToClient == from_cid:
+                    if msg.ToClient == source_cid:
                         msg_list.append(msg)
                         this_msg_size_in_bytes = (
                                 CLIENT_ID_LEN + MESSAGE_ID_LEN + MESSAGE_TYPE_LEN + CONTENT_SIZE_LEN + sys.getsizeof(
                             msg.Content))
                         values[2] += this_msg_size_in_bytes  # update the total size
                         # add the message content
-                        values.append(*(str.encode(from_cid) + str.encode(str(msg.ID)) + str.encode(msg.Type) +
-                                        str.encode(str(sys.getsizeof(msg.Content))) + str.encode(msg.Content)))
+                        values.append(*source_cid + msg.ID + msg.Type +
+                                       tuple(str.encode(str(sys.getsizeof(msg.Content)))) + tuple(
+                            str.encode(msg.Content)))
 
                         frmt += this_msg_size_in_bytes * 'B'
                         self.__messages.remove(msg)

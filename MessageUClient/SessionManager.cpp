@@ -13,8 +13,9 @@ void SessionManager::handle_user_request(tcp::socket& sock, requestCode rc, stri
 	RequestPacketHeader* request = nullptr;
 	char my_cid[CMN_SIZE];	//only 16 bytes , keep on the stack ...
 
-	if (rc == requestCode::userRegister) 
+	if (rc == requestCode::userRegister) {
 		request = new RegisterPacket((uint16_t)rc, input, rsapriv->getPublicKey().c_str());
+	}
 	else{
 		get_my_id(my_cid);
 		if (rc == requestCode::clientsList || rc == requestCode::pullMsgs) 
@@ -38,7 +39,7 @@ void SessionManager::handle_user_request(tcp::socket& sock, requestCode rc, stri
 void SessionManager::handle_user_request(tcp::socket& sock, msgType mt, string input) {
 	
 	char my_cid[CMN_SIZE];	//only 16 bytes , keep on the stack ...
-	get_my_id(my_cid);
+	get_my_id(my_cid);		// if its one of the below requests i should already have cid ( these requests are not reachable if user didnt register )
 	
 	// get the client id from the list of available clients 
 	char* recepient_id = get_recepient_id_by_name(input);
@@ -50,16 +51,20 @@ void SessionManager::handle_user_request(tcp::socket& sock, msgType mt, string i
 	if (mt == msgType::textMsgSend) {
 		// get the message here as input from user and send it downstream	//TODO
 		std::cout << "Enter the text message : ";
+		std::getline(std::cin, input);		// TODO never trust input ???
 
-		// encrypt message with my symmetric key 
-		request = new MsgSendPacket(my_cid, recepient_id, (uint8_t)mt, ZERO,"");
+		// TODO encrypt message with my symmetric key 
+		//std::string encrypted_msg = aes->encrypt(input.c_str(), input.length());
+	
+		request = new MsgSendPacket(my_cid, recepient_id, (uint8_t)mt,input);
 	}
 	else if (mt == msgType::symKeySend) {
 		// encrypt my symKey with recepient public key 
-		request = new MsgSendPacket(my_cid, recepient_id, (uint8_t)mt, ZERO, "");		//TODO
+		// TODO where does the rec pub key comes from ? check 
+		request = new MsgSendPacket(my_cid, recepient_id, (uint8_t)mt, "");		//TODO
 	}
 	else {
-		request = new MsgSendPacket(my_cid, recepient_id, (uint8_t)mt, ZERO, "");	// for symkey request and file send - no content
+		request = new MsgSendPacket(my_cid, recepient_id, (uint8_t)mt, "");	// for symkey request and file send - no content
 	}
 	
 	pt->send(sock, request);
@@ -116,7 +121,10 @@ void SessionManager::handle_server_response(packetReciever* pr, RequestPacketHea
 				// update the entry in the list with the public key of that client that we just received from server
 				e.set_pub_key(((PubKeyResponsePacket*)response)->get_pub_key());	
 				// TODO clean 
-				std::cout << "public key that was received : " << std::endl << ((PubKeyResponsePacket*)response)->get_pub_key() << std::endl;
+				std::cout << "public key that was received : " << std::endl;
+				std::string pubk(((PubKeyResponsePacket*)response)->get_pub_key(), PUB_KEY_LEN);
+				for (int i = 0; i < pubk.size(); i++)
+					std::cout << std::hex << std::setfill('0') << std::setw(2) << ((int)pubk[i] & 0xff);
 			}
 		}
 		break;
@@ -154,10 +162,15 @@ void SessionManager::get_my_id(char* outBuf) const
 	}
 	else {
 		string line;
+		int temp;
 		getline(input_stream, line);	// ignore name 
 		getline(input_stream, line);
-		for (int i = 0; i < line.size() && i < CMN_SIZE; i++) {
-			outBuf[i] = line[i];
+		std::stringstream ss;
+		for (int i = 0; i < line.size() && i < CMN_SIZE*2; i+=2) {
+			// convert back each two hex characters into raw data (extended ASCII value)
+			std::istringstream iss(line.substr(i, 2));
+			iss >> std::hex >> temp;
+			outBuf[i / 2] = static_cast<char>(temp);
 		}
 	}
 }
