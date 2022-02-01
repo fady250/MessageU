@@ -113,5 +113,8 @@
     <ClInclude Include="MsgEntry.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="MessageSentPacket.h">
+      <Filter>Header Files\ResponsePackets</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

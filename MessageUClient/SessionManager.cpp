@@ -131,6 +131,7 @@ void SessionManager::handle_server_response(packetReciever* pr, RequestPacketHea
 
 	case((uint16_t)responseCode::msgSent):
 		cout << "message was sent successfully ( may not be read yet )" << endl;
+		cout << "message ID : " << *(uint32_t*)(((MessageSentPacket*)response)->getMessageId()) << endl;
 		break;
 
 	case((uint16_t)responseCode::msgPull):
@@ -139,6 +140,7 @@ void SessionManager::handle_server_response(packetReciever* pr, RequestPacketHea
 			name = get_name_by_id(msg_vec->at(i).getPayHeader()->p.client_id);
 			cout << "From: " << name << "\nContent: " << endl;
 			// decrypt 
+
 			cout << msg_vec->at(i).getMsg() << endl;
 			cout << "-----<EOM>------" << endl;
 		}
@@ -197,7 +199,7 @@ string SessionManager::get_name_by_id(char* id) const
 {
 	for (ClientEntry e : clients) {
 		string s(id);
-		if (misc::convertNullTerminatedToString(e.getId()) == s) {
+		if (misc::convertToString(e.getId(),CMN_SIZE) == s) {
 			return string(e.getName());
 		}
 	}

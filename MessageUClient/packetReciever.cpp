@@ -43,15 +43,12 @@ void packetReciever::recieve(tcp::socket& sock)
 		rp = new PubKeyResponsePacket(&rhu,cid,pub_key);
 	}
 	else if (rhu.h.code == (uint16_t)responseCode::msgSent) {
-		// TODO crate rp !!!
-		// TODO what do i need to do with msg id ? 
 		// receive the payload 
 		char cid[CMN_SIZE];
 		char mid[MSG_ID_LEN];
 		length = boost::asio::read(sock, boost::asio::buffer(cid, CMN_SIZE), ec);
 		length = boost::asio::read(sock, boost::asio::buffer(mid, MSG_ID_LEN), ec);
-		// TODO do we need to print something here ? does it worth a new class packet ?
-		//// WE HAVE THE HEADER READY
+		rp = new MessageSentPacket(&rhu, cid, mid);
 	}
 	else if (rhu.h.code == (uint16_t)responseCode::msgPull) {
 		uint32_t pay_size = rhu.h.payload_size;
@@ -60,7 +57,7 @@ void packetReciever::recieve(tcp::socket& sock)
 		rp = new MessagePacket(&rhu);
 		while (pay_size > 0) {
 			// receive the structure that is before the variable lenght message content
-			length = boost::asio::read(sock, boost::asio::buffer(mppu.buf, CMN_SIZE), ec);
+			length = boost::asio::read(sock, boost::asio::buffer(mppu.buf,sizeof(msgPullPayloadUnion)), ec);
 			MsgEntry e(&mppu);
 			// receive the message 
 			char* msg = new char[mppu.p.msg_size];
@@ -73,6 +70,7 @@ void packetReciever::recieve(tcp::socket& sock)
 	else if (rhu.h.code == (uint16_t)responseCode::error) {
 		// nothing to receive 
 		// WE HAVE THE HEADER READY
+		rp = new ResponsePacketHeader(rhu.h.version, rhu.h.code, rhu.h.payload_size);
 		// TODO where are we printing errror msg to the user
 	}
 	else {// nothing to receive

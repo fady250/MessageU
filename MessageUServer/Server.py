@@ -60,7 +60,7 @@ class Server(object):
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
             s.bind(('', self.__PORT))
             s.listen(100)
-            # s.setblocking(False)
+            s.setblocking(False)      #TODO TODO !!!!
             self.__sel.register(s, selectors.EVENT_READ, self.accept)
             while True:
                 events = self.__sel.select()
@@ -71,7 +71,7 @@ class Server(object):
     def accept(self, sock, mask):
         conn, addr = sock.accept()
         print('accepted', conn, 'from', addr)
-        # conn.setblocking(False)
+        conn.setblocking(False)  #TODO TODO !!!!!
         self.__sel.register(conn, selectors.EVENT_READ, self.handle_client_request)
 
     def handle_client_request(self, conn, mask):
@@ -175,24 +175,59 @@ class Server(object):
 
             elif code == RequestCode.pullMsgs.value:
                 frmt = '<BHI'
-                values = [VERSION, ResponseCode.clientList.value, ZERO]
-                msg_list = []
-                for msg in self.__messages:
-                    if msg.ToClient == source_cid:
-                        msg_list.append(msg)
-                        this_msg_size_in_bytes = (
-                                CLIENT_ID_LEN + MESSAGE_ID_LEN + MESSAGE_TYPE_LEN + CONTENT_SIZE_LEN + sys.getsizeof(
-                            msg.Content))
-                        values[2] += this_msg_size_in_bytes  # update the total size
+                values = (VERSION, ResponseCode.msgPull.value)   # prepare the tuple to be packed and sent
+                payload = ()
+                payload_size = 0
+                for msg in self.__messages:           # loop over the messages
+                    if msg.ToClient == source_cid:    # if this msg destination is for the client who requested to pull
+                        this_msg_size_in_bytes = (CLIENT_ID_LEN + MESSAGE_ID_LEN + MESSAGE_TYPE_LEN + CONTENT_SIZE_LEN + len(msg.Content))
+                        payload_size += this_msg_size_in_bytes  # update the total size
+
                         # add the message content
-                        values.append(*source_cid + msg.ID + msg.Type +
-                                       tuple(str.encode(str(sys.getsizeof(msg.Content)))) + tuple(
-                            str.encode(msg.Content)))
+                        print("==============================================")
+                        print(source_cid)
+                        print(struct.pack("I", msg.ID))
+                        print(struct.pack("B", msg.Type))
+                        print(struct.pack("I", (sys.getsizeof(msg.Content))))
+                        print(tuple(msg.Content))
+                        print(len(msg.Content))
+                        content_len = len(msg.Content)
 
-                        frmt += this_msg_size_in_bytes * 'B'
+                        payload += (source_cid + tuple(struct.pack("I", msg.ID)) + tuple(struct.pack("B", msg.Type)) +
+                                    tuple(struct.pack("I", content_len)) + tuple(msg.Content))
+
+                        print(payload)
+                        #payload += (source_cid + tuple(str(msg.ID)) + tuple(str(msg.Type)) +
+                        #            tuple(str(sys.getsizeof(msg.Content))) + tuple(msg.Content))
+                        frmt += (this_msg_size_in_bytes * 'B')
+                        #frmt += ("IBI" + content_len * 'B')
                         self.__messages.remove(msg)
-
+                values = (*values, payload_size, *payload)
                 buf_size_in_bytes = struct.calcsize(frmt)  # TODO need to send big endian ?
                 buf = ctypes.create_string_buffer(buf_size_in_bytes)
-                struct.pack_into(frmt, buf, 0, *(tuple(values)))
+                struct.pack_into(frmt, buf, 0, *values)
                 conn.sendall(buf)
+
+                #frmt = '<BHI'
+                #values = [VERSION, ResponseCode.clientList.value, ZERO]
+                #msg_list = []
+                #for msg in self.__messages:
+                #    if msg.ToClient == source_cid:
+                #        msg_list.append(msg)
+                #        this_msg_size_in_bytes = (
+                #                CLIENT_ID_LEN + MESSAGE_ID_LEN + MESSAGE_TYPE_LEN + CONTENT_SIZE_LEN + sys.getsizeof(
+                #            msg.Content))
+                #        values[2] += this_msg_size_in_bytes  # update the total size
+                #        # add the message content
+                #
+                #        values.append(*source_cid + tuple(msg.ID) + tuple(msg.Type) +
+                #                       tuple(str.encode(str(sys.getsizeof(msg.Content)))) + tuple(
+                #            str.encode(msg.Content)))
+
+                #        frmt += this_msg_size_in_bytes * 'B'
+                #        self.__messages.remove(msg)
+
+                #buf_size_in_bytes = struct.calcsize(frmt)  # TODO need to send big endian ?
+                #buf = ctypes.create_string_buffer(buf_size_in_bytes)
+                #struct.pack_into(frmt, buf, 0, *(tuple(values)))
+                #conn.sendall(buf)

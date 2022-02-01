@@ -163,6 +163,7 @@
     <ClInclude Include="ClientEntry.h" />
     <ClInclude Include="ClientListPacket.h" />
     <ClInclude Include="MessagePacket.h" />
+    <ClInclude Include="MessageSentPacket.h" />
     <ClInclude Include="misc.h" />
     <ClInclude Include="MsgEntry.h" />
     <ClInclude Include="MsgSendPacket.h" />

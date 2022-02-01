@@ -7,6 +7,7 @@
 #include "PubKeyResponsePacket.h"
 #include "ClientListPacket.h"
 #include "MessagePacket.h"
+#include "MessageSentPacket.h"
 
 
 using boost::asio::ip::tcp;
