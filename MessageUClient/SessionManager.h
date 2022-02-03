@@ -22,7 +22,7 @@ private:
 	packetReciever* pr = nullptr;
 	//TODO register done boolean - wo it being true - no requests can be done except of register 
 	vector<ClientEntry> clients;
-	const char* get_my_id() const;							// get my id from my.info
+	void get_my_id(char* outBuf) const;							// get my id from my.info
 	char* get_recepient_id_by_name(string name) const;
 	string get_name_by_id(char* id) const;
 	void handle_server_response(packetReciever* pr, RequestPacketHeader* request);

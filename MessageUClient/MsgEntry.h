@@ -13,16 +13,16 @@ public:
 	}
 	MsgEntry(const MsgEntry& me) : MsgEntry(me.getPayHeader()) {			// the first ctor will build the union and copy it 
 		//build and copy the message content
-		set_msg(me.getMsg());
+		set_msg(me.getMsg().c_str());
 	}
 	msgPullPayloadUnion* getPayHeader()const {
 		return mppu;
 	}
-	char* getMsg()const {
-		return message_content;
+	std::string getMsg()const {
+		return misc::convertToString(message_content, mppu->p.msg_size);
 	}
 
-	void set_msg(char* msg) {
+	void set_msg(const char* msg) {
 		message_content = new char[mppu->p.msg_size];
 		memcpy(message_content, msg, mppu->p.msg_size);
 	}
