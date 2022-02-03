@@ -85,7 +85,7 @@ void Client::handle_user_input(tcp::socket& sock)
 					if (code == (uint8_t)userInput::SendSymKey)											// send my symmetric key to client B
 						sm->handle_user_request(sock, msgType::symKeySend, input);
 				}
-				catch (exception e) {
+				catch (exception& e) {
 					cout << e.what() << endl;
 				}
 			}

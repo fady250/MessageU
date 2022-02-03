@@ -33,13 +33,13 @@ public:
 	}
 
 	unsigned char* get_pub_key() {
-		return sym_key;
+		return pub_key;
 	}
 
-	void set_sym_key(char* sk) {
+	void set_sym_key(const char* sk) {
 		memcpy(sym_key, sk, SYM_KEY_LEN);
 	}
-	void set_pub_key(char* pk) {
+	void set_pub_key(const char* pk) {
 		memcpy(pub_key, pk, PUB_KEY_LEN);
 	}
 

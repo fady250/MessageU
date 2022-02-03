@@ -21,12 +21,13 @@ void SessionManager::handle_user_request(tcp::socket& sock, requestCode rc, stri
 		if (rc == requestCode::clientsList || rc == requestCode::pullMsgs) 
 			request = new RequestPacketHeader(my_cid, (uint16_t)rc);		// header only 
 		if (rc == requestCode::pullClientPubKey) {
-			char* rec_cid = get_recepient_id_by_name(input);
+			char* rec_cid = get_recepient_id_by_name(input);	// get the client id from the list of available clients 
 			if (!rec_cid) {
 				throw exception("The user you try to send to doesnt exist !");
 			}
-			request = new PubKeyPullPacket(my_cid, (uint16_t)rc, rec_cid);		// get the client id from the list of available clients 
+			request = new PubKeyPullPacket(my_cid, (uint16_t)rc, rec_cid);		
 		}
+		// else ? TODO
 	}
 
 	pt->send(sock, request);
@@ -54,17 +55,31 @@ void SessionManager::handle_user_request(tcp::socket& sock, msgType mt, string i
 		std::getline(std::cin, input);		// TODO never trust input ???
 
 		// TODO encrypt message with my symmetric key 
-		//std::string encrypted_msg = aes->encrypt(input.c_str(), input.length());
+		std::string encrypted_msg = aes->encrypt(input.c_str(), input.length());
 	
-		request = new MsgSendPacket(my_cid, recepient_id, (uint8_t)mt,input);
+		request = new MsgSendPacket(my_cid, recepient_id, (uint8_t)mt, encrypted_msg);
 	}
 	else if (mt == msgType::symKeySend) {
 		// encrypt my symKey with recepient public key 
-		// TODO where does the rec pub key comes from ? check 
-		request = new MsgSendPacket(my_cid, recepient_id, (uint8_t)mt, "");		//TODO
+		// get the public key from the clients list for this specific client that i want to send this message to 
+		for (auto& e : clients) {
+			if (misc::convertToString(e.getId(), CMN_SIZE) == misc::convertToString(recepient_id, CMN_SIZE)) {
+				unsigned char* pub_key = e.get_pub_key();
+				if (!pub_key) {
+					cout << "Cant process request - no public key available" << endl;	// TODO exceptions ?
+				}
+				else {
+					//create an RSA encryptor
+					string pubkey = misc::convertToString((char *)pub_key, PUB_KEY_LEN);
+					RSAPublicWrapper rsapub(pubkey);
+					std::string encrypted = rsapub.encrypt((const char*)aes->getKey(), CMN_SIZE);	
+					request = new MsgSendPacket(my_cid, recepient_id, (uint8_t)mt, encrypted);	
+				}
+			}
+		}
 	}
 	else {
-		request = new MsgSendPacket(my_cid, recepient_id, (uint8_t)mt, "");	// for symkey request and file send - no content
+		request = new MsgSendPacket(my_cid, recepient_id, (uint8_t)mt, "");	// for symkey request and file send - no content and no encryption 
 	}
 	
 	pt->send(sock, request);
@@ -88,9 +103,10 @@ void SessionManager::handle_server_response(packetReciever* pr, RequestPacketHea
 		if (!outfilex) {
 			throw exception("Unable to create file my.info !");
 		}
-		name = string(((RegisterPacket*)request)->getPay()->h.name) +"\n";
+		name = string(((RegisterPacket*)request)->getPay()->h.name) +"\n";	// The name is null terminated , its safe to send it to string ctor 
 		outfilex.write(name.c_str(), name.size());
-		cid = string(((RegisterSuccessPacket*)response)->getPay());	// my id from server 
+		//cid = string(((RegisterSuccessPacket*)response)->getPay());	
+		cid = misc::convertToString(((RegisterSuccessPacket*)response)->getPay(), CMN_SIZE);// my id from server 
 		for (int i = 0; i < CMN_SIZE; i++)
 			outfilex << std::hex << std::setfill('0') << std::setw(2) << ((int)cid[i] & 0xff);
 		outfilex << endl;
@@ -120,6 +136,7 @@ void SessionManager::handle_server_response(packetReciever* pr, RequestPacketHea
 			if (misc::convertToString(e.getId(),CMN_SIZE) == cid) {
 				// update the entry in the list with the public key of that client that we just received from server
 				e.set_pub_key(((PubKeyResponsePacket*)response)->get_pub_key());	
+				cout << "Public key for " << e.getName() << " was received " << endl;
 
 				// TODO clean 
 				//std::cout << "public key that was received : " << std::endl;
@@ -132,41 +149,55 @@ void SessionManager::handle_server_response(packetReciever* pr, RequestPacketHea
 
 	case((uint16_t)responseCode::msgSent):
 		cout << "message was sent successfully ( may not be read yet )" << endl;
-		cout << "message ID : " << *(uint32_t*)(((MessageSentPacket*)response)->getMessageId()) << endl;
+		//cout << "message ID : " << *(uint32_t*)(((MessageSentPacket*)response)->getMessageId()) << endl;
 		break;
 
 	case((uint16_t)responseCode::msgPull):
 		msg_vec = ((MessagePacket*)response)->getPay();
 		for (int i = 0; i < msg_vec->size(); i++) {
+			name = get_name_by_id(msg_vec->at(i).getPayHeader()->p.client_id);
+			cout << "From: " << name << "\nContent: " << endl;
+
 			msgType type = (msgType)(msg_vec->at(i).getPayHeader()->p.msg_type);
+
 			if ( type == msgType::symKeyReq) {
+
 				cout << "Request for symmetric key" << endl;
+
 			}else if(type == msgType::symKeySend){
+
 				cout << "Symmetric key received" << endl;
+				// decrypt using my private key 
+				string decrypted = rsapriv->decrypt(msg_vec->at(i).getMsg());
+				for (auto& e : clients) {
+					if (misc::convertToString(e.getId(), CMN_SIZE) == misc::convertToString(msg_vec->at(i).getPayHeader()->p.client_id, CMN_SIZE)) {
+						// update the entry in the list with the symmetric key of that client that we just received from server
+						e.set_sym_key(decrypted.c_str());
+					}
+				}
 			}
 			else if (type == msgType::textMsgSend) {
-				name = get_name_by_id(msg_vec->at(i).getPayHeader()->p.client_id);
-				cout << "From: " << name << "\nContent: " << endl;
+
 				// decrypt
 				// get the symmetric key from the clients list for this specific client that sent the message 
-				//for (auto& e : clients) {
-				//	if (misc::convertToString(e.getId(), CMN_SIZE) == misc::convertToString(msg_vec->at(i).getPayHeader()->p.client_id, CMN_SIZE)) {
-				//		unsigned char* sym_key = e.get_sym_key();
-				//		if (!sym_key) {
-				//			cout << "Cant decrypt message" << endl;
-				//		}
-				//		else {
-				//			try {
-				//				AESWrapper aes_decription(sym_key, AESWrapper::DEFAULT_KEYLENGTH);	// create object for decrypting the message with the sender relevant symmetric key
-				//				std::string decrypted = aes_decription.decrypt(msg_vec->at(i).getMsg().c_str(), msg_vec->at(i).getMsg().length());
-				//				std::cout << decrypted << endl;
-				//			}
-				//			catch (exception e) {
-				//				cout << "Cant decrypt message" << endl;
-				//			}
-				//		}
-				//	}
-				//}
+				for (auto& e : clients) {
+					if (misc::convertToString(e.getId(), CMN_SIZE) == misc::convertToString(msg_vec->at(i).getPayHeader()->p.client_id, CMN_SIZE)) {
+						unsigned char* sym_key = e.get_sym_key();
+						if (!sym_key) {
+							cout << "Cant decrypt message" << endl;
+						}
+						else {
+							try {
+								AESWrapper aes_decription(sym_key, AESWrapper::DEFAULT_KEYLENGTH);	// create object for decrypting the message with the sender relevant symmetric key
+								std::string decrypted = aes_decription.decrypt(msg_vec->at(i).getMsg().c_str(), msg_vec->at(i).getMsg().length());
+								std::cout << decrypted << endl;
+							}
+							catch (std::exception& e) {
+								cout << "Cant decrypt message" << endl;
+							}
+						}
+					}
+				}
 
 				cout << msg_vec->at(i).getMsg() << endl;
 				cout << "-----<EOM>------" << endl;
