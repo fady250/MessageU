@@ -116,16 +116,17 @@ class Server(object):
                 conn.sendall(buf)
 
             elif code == RequestCode.clientsList.value:
-                frmt = '<BHI' + self.__clients.__len__() * (NAME_MAX_SIZE + CLIENT_ID_LEN) * 'B'
+                frmt = '<BHI' + (self.__clients.__len__()-1) * (NAME_MAX_SIZE + CLIENT_ID_LEN) * 'B'
                 buf_size_in_bytes = struct.calcsize(frmt)  # TODO need to send big endian ?
                 buf = ctypes.create_string_buffer(buf_size_in_bytes)
                 values = (
-                    VERSION, ResponseCode.clientList.value, self.__clients.__len__() * (NAME_MAX_SIZE + CLIENT_ID_LEN))
+                    VERSION, ResponseCode.clientList.value, (self.__clients.__len__()-1) * (NAME_MAX_SIZE + CLIENT_ID_LEN))
                 for entry in self.__clients:
                     print(values)
                     print(entry.ID)
                     print(entry.UserName)
-                    values += entry.ID + entry.UserName
+                    if source_cid != entry.ID:                  # the requester shouldn't get itself as client
+                        values += entry.ID + entry.UserName
                 struct.pack_into(frmt, buf, 0, *values)
                 conn.sendall(buf)
 
@@ -193,15 +194,13 @@ class Server(object):
                         print(len(msg.Content))
                         content_len = len(msg.Content)
 
-                        payload += (source_cid + tuple(struct.pack("I", msg.ID)) + tuple(struct.pack("B", msg.Type)) +
+                        payload += (msg.FromClient + tuple(struct.pack("I", msg.ID)) + tuple(struct.pack("B", msg.Type)) +
                                     tuple(struct.pack("I", content_len)) + tuple(msg.Content))
 
                         print(payload)
-                        #payload += (source_cid + tuple(str(msg.ID)) + tuple(str(msg.Type)) +
-                        #            tuple(str(sys.getsizeof(msg.Content))) + tuple(msg.Content))
                         frmt += (this_msg_size_in_bytes * 'B')
-                        #frmt += ("IBI" + content_len * 'B')
-                        self.__messages.remove(msg)
+
+                self.__messages = [msg for msg in self.__messages if msg.ToClient != source_cid]  # remove the messages
                 values = (*values, payload_size, *payload)
                 buf_size_in_bytes = struct.calcsize(frmt)  # TODO need to send big endian ?
                 buf = ctypes.create_string_buffer(buf_size_in_bytes)

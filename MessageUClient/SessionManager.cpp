@@ -10,7 +10,7 @@ SessionManager::SessionManager() {
 
 void SessionManager::handle_user_request(tcp::socket& sock, requestCode rc, string input) {
 
-	RequestPacketHeader* request = nullptr;
+	RequestPacketHeader* request = nullptr;	// only pointer to hold the object
 	char my_cid[CMN_SIZE];	//only 16 bytes , keep on the stack ...
 
 	if (rc == requestCode::userRegister) {
@@ -120,11 +120,12 @@ void SessionManager::handle_server_response(packetReciever* pr, RequestPacketHea
 			if (misc::convertToString(e.getId(),CMN_SIZE) == cid) {
 				// update the entry in the list with the public key of that client that we just received from server
 				e.set_pub_key(((PubKeyResponsePacket*)response)->get_pub_key());	
+
 				// TODO clean 
-				std::cout << "public key that was received : " << std::endl;
-				std::string pubk(((PubKeyResponsePacket*)response)->get_pub_key(), PUB_KEY_LEN);
-				for (int i = 0; i < pubk.size(); i++)
-					std::cout << std::hex << std::setfill('0') << std::setw(2) << ((int)pubk[i] & 0xff);
+				//std::cout << "public key that was received : " << std::endl;
+				//std::string pubk(((PubKeyResponsePacket*)response)->get_pub_key(), PUB_KEY_LEN);
+				//for (int i = 0; i < pubk.size(); i++)
+				//	std::cout << std::hex << std::setfill('0') << std::setw(2) << ((int)pubk[i] & 0xff);
 			}
 		}
 		break;
@@ -137,12 +138,39 @@ void SessionManager::handle_server_response(packetReciever* pr, RequestPacketHea
 	case((uint16_t)responseCode::msgPull):
 		msg_vec = ((MessagePacket*)response)->getPay();
 		for (int i = 0; i < msg_vec->size(); i++) {
-			name = get_name_by_id(msg_vec->at(i).getPayHeader()->p.client_id);
-			cout << "From: " << name << "\nContent: " << endl;
-			// decrypt 
+			msgType type = (msgType)(msg_vec->at(i).getPayHeader()->p.msg_type);
+			if ( type == msgType::symKeyReq) {
+				cout << "Request for symmetric key" << endl;
+			}else if(type == msgType::symKeySend){
+				cout << "Symmetric key received" << endl;
+			}
+			else if (type == msgType::textMsgSend) {
+				name = get_name_by_id(msg_vec->at(i).getPayHeader()->p.client_id);
+				cout << "From: " << name << "\nContent: " << endl;
+				// decrypt
+				// get the symmetric key from the clients list for this specific client that sent the message 
+				//for (auto& e : clients) {
+				//	if (misc::convertToString(e.getId(), CMN_SIZE) == misc::convertToString(msg_vec->at(i).getPayHeader()->p.client_id, CMN_SIZE)) {
+				//		unsigned char* sym_key = e.get_sym_key();
+				//		if (!sym_key) {
+				//			cout << "Cant decrypt message" << endl;
+				//		}
+				//		else {
+				//			try {
+				//				AESWrapper aes_decription(sym_key, AESWrapper::DEFAULT_KEYLENGTH);	// create object for decrypting the message with the sender relevant symmetric key
+				//				std::string decrypted = aes_decription.decrypt(msg_vec->at(i).getMsg().c_str(), msg_vec->at(i).getMsg().length());
+				//				std::cout << decrypted << endl;
+				//			}
+				//			catch (exception e) {
+				//				cout << "Cant decrypt message" << endl;
+				//			}
+				//		}
+				//	}
+				//}
 
-			cout << msg_vec->at(i).getMsg() << endl;
-			cout << "-----<EOM>------" << endl;
+				cout << msg_vec->at(i).getMsg() << endl;
+				cout << "-----<EOM>------" << endl;
+			}
 		}
 		break;
 
@@ -179,27 +207,19 @@ void SessionManager::get_my_id(char* outBuf) const
 
 char* SessionManager::get_recepient_id_by_name(string name) const
 {
-
 	for (const auto& e : clients) {		// use the original client entry object to get the correct buffer pointer
 
 		if (misc::convertNullTerminatedToString(e.getName()) == name) {
 			return e.getId();
 		}
 	}
-	//for (ClientEntry e : clients) {
-	//
-	//	if (misc::convertNullTerminatedToString(e.getName()) == name) {
-	//		return e.getId();
-	//	}
-	//}
 	return nullptr;	// TODO throw ?
 }
 
 string SessionManager::get_name_by_id(char* id) const
 {
 	for (ClientEntry e : clients) {
-		string s(id);
-		if (misc::convertToString(e.getId(),CMN_SIZE) == s) {
+		if (misc::convertToString(e.getId(),CMN_SIZE) == misc::convertToString(id, CMN_SIZE)) {
 			return string(e.getName());
 		}
 	}
