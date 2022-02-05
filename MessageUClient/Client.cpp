@@ -58,7 +58,7 @@ void Client::handle_user_input(tcp::socket& sock)
 				if (code == (uint8_t)userInput::exit) break;
 				else if (code == (uint8_t)userInput::Register) {
 					if (std::filesystem::exists(std::filesystem::current_path().string() + "\\my.info")) {
-						cout << "Error ! my.info already exists !" << endl;
+						cout << "Error ! Client already registered !" << endl;
 					}
 					else {
 						std::cout << "Enter your name : ";

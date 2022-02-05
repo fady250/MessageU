@@ -2,7 +2,15 @@
 #include "misc.h"
 
 SessionManager::SessionManager() {
-	rsapriv = new RSAPrivateWrapper();		// automatically generates private key TODO there is a constructor that takes private key and build the object , this way we can use the same public key that we generated once we registered on the server
+	if (std::filesystem::exists(std::filesystem::current_path().string() + "\\my.info")) {
+		// Create an RSA decryptor based on the existing private key
+		string privkey = get_my_private_key();
+		rsapriv = new RSAPrivateWrapper(Base64Wrapper::decode(privkey));
+	}
+	else {
+		rsapriv = new RSAPrivateWrapper();		// automatically generates pair of keys 
+	}
+	
 	pt = new packetTransmitter();
 	pr = new packetReciever();
 }
@@ -69,10 +77,10 @@ void SessionManager::handle_user_request(tcp::socket& sock, msgType mt, string i
 		}
 	}
 	else if (mt == msgType::symKeySend) {
-		// encrypt my symKey with recepient public key 
-		// get the public key from the clients list for this specific client that i want to send this message to 
+		// encrypt my symKey with recepient public key  
 		for (auto& e : clients) {
 			if (misc::convertToString(e.getId(), CMN_SIZE) == misc::convertToString(recepient_id, CMN_SIZE)) {
+				// get the public key from the clients list for this specific client that i want to send this message to
 				unsigned char* pub_key = e.get_pub_key();
 				if (!pub_key) {
 					throw exception("Cant process request - no public key available");
@@ -183,7 +191,6 @@ void SessionManager::handle_server_response(packetReciever* pr, RequestPacketHea
 				// decrypt using my private key 
 				string decrypted = rsapriv->decrypt(msg_vec->at(i).getMsg());
 				// update sym_key in the entry of the client that sent it 
-				//TODO
 				for (auto& e : clients) {
 					if (misc::convertToString(e.getId(), CMN_SIZE) == misc::convertToString(msg_vec->at(i).getPayHeader()->p.client_id, CMN_SIZE)) {
 						e.set_sym_key((unsigned char*)decrypted.c_str());
@@ -211,27 +218,6 @@ void SessionManager::handle_server_response(packetReciever* pr, RequestPacketHea
 						}
 					}
 				}
-
-				// get the symmetric key from the clients list for this specific client that sent the message 
-				//for (auto& e : clients) {
-				//	if (misc::convertToString(e.getId(), CMN_SIZE) == misc::convertToString(msg_vec->at(i).getPayHeader()->p.client_id, CMN_SIZE)) {
-				//		unsigned char* sym_key = e.get_sym_key();
-				//		if (!sym_key) {
-				//			throw exception("Cant decrypt message");
-				//		}
-				//		else {
-				//			try {
-				//				AESWrapper aes_decription(sym_key, AESWrapper::DEFAULT_KEYLENGTH);	// create object for decrypting the message with the sender relevant symmetric key
-				//				std::string decrypted = aes_decription.decrypt(msg_vec->at(i).getMsg().c_str(), msg_vec->at(i).getMsg().length());
-				//				std::cout << decrypted << endl;
-				//			}
-				//			catch (std::exception& e) {
-				//				throw exception("Cant decrypt message");
-				//			}
-				//		}
-				//	}
-				//}
-
 				//cout << "encrypted" << msg_vec->at(i).getMsg() << endl;		// todo remove
 				cout << "-----<EOM>------" << endl;
 			}
@@ -240,11 +226,6 @@ void SessionManager::handle_server_response(packetReciever* pr, RequestPacketHea
 
 	case((uint16_t)responseCode::error):
 		cout << "Server responded with an error !" << endl;
-		//TODO 
-		//if (request->getHeader()->h.code == (uint16_t)requestCode::userRegister)
-		//	cout << "This User name already exists in the server !" << endl;
-		//else
-		//	cout << "Server responded with an error !" << endl;
 		break;
 
 	default:
@@ -273,8 +254,23 @@ void SessionManager::get_my_id(char* outBuf) const
 	}
 }
 
-void SessionManager::get_my_private_key(char* outBuf) const
+string SessionManager::get_my_private_key() const
 {
+	ifstream input_stream("my.info");
+	if (!input_stream) {
+		throw exception("Can't open input my.info!");
+	}
+	else {
+		string line, private_key;
+		int temp;
+		getline(input_stream, line);	// ignore name 
+		getline(input_stream, line);	// ignore uuid
+		while (std::getline(input_stream, line))
+		{
+			private_key += line;
+		}
+		return private_key;
+	}
 }
 
 char* SessionManager::get_recepient_id_by_name(string name) const
@@ -295,7 +291,7 @@ string SessionManager::get_name_by_id(char* id) const
 			return string(e.getName());
 		}
 	}
-	return nullptr;
+	return "";
 }
 
 SessionManager::~SessionManager() {
