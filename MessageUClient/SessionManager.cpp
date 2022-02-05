@@ -2,8 +2,7 @@
 #include "misc.h"
 
 SessionManager::SessionManager() {
-	aes = new AESWrapper();					// automatically generate random key ( symmetric key )
-	rsapriv = new RSAPrivateWrapper();		// automatically generates private key 
+	rsapriv = new RSAPrivateWrapper();		// automatically generates private key TODO there is a constructor that takes private key and build the object , this way we can use the same public key that we generated once we registered on the server
 	pt = new packetTransmitter();
 	pr = new packetReciever();
 }
@@ -54,10 +53,15 @@ void SessionManager::handle_user_request(tcp::socket& sock, msgType mt, string i
 		std::cout << "Enter the text message : ";
 		std::getline(std::cin, input);		// TODO never trust input ???
 
-		// TODO encrypt message with my symmetric key 
-		std::string encrypted_msg = aes->encrypt(input.c_str(), input.length());
-	
-		request = new MsgSendPacket(my_cid, recepient_id, (uint8_t)mt, encrypted_msg);
+		//encrypt message with symmetric key 
+		if (sym_key) {
+			AESWrapper aes(sym_key, AESWrapper::DEFAULT_KEYLENGTH);
+			std::string encrypted_msg = aes.encrypt(input.c_str(), input.length());
+			request = new MsgSendPacket(my_cid, recepient_id, (uint8_t)mt, encrypted_msg);
+		}
+		else {
+			throw exception("Encryption key not found !");
+		}
 	}
 	else if (mt == msgType::symKeySend) {
 		// encrypt my symKey with recepient public key 
@@ -66,13 +70,19 @@ void SessionManager::handle_user_request(tcp::socket& sock, msgType mt, string i
 			if (misc::convertToString(e.getId(), CMN_SIZE) == misc::convertToString(recepient_id, CMN_SIZE)) {
 				unsigned char* pub_key = e.get_pub_key();
 				if (!pub_key) {
-					cout << "Cant process request - no public key available" << endl;	// TODO exceptions ?
+					throw exception("Cant process request - no public key available");
 				}
 				else {
+					// create new symmetric key , each symKeySend will cretae new key and overwrite existing one if applicable
+					AESWrapper aes;			// generates new random key 
+					if (sym_key) delete sym_key;
+					sym_key = new unsigned char[AESWrapper::DEFAULT_KEYLENGTH];
+					memcpy(sym_key, aes.getKey(), AESWrapper::DEFAULT_KEYLENGTH);
+
 					//create an RSA encryptor
 					string pubkey = misc::convertToString((char *)pub_key, PUB_KEY_LEN);
 					RSAPublicWrapper rsapub(pubkey);
-					std::string encrypted = rsapub.encrypt((const char*)aes->getKey(), CMN_SIZE);	
+					std::string encrypted = rsapub.encrypt((const char*)sym_key, AESWrapper::DEFAULT_KEYLENGTH);
 					request = new MsgSendPacket(my_cid, recepient_id, (uint8_t)mt, encrypted);	
 				}
 			}
@@ -136,7 +146,8 @@ void SessionManager::handle_server_response(packetReciever* pr, RequestPacketHea
 			if (misc::convertToString(e.getId(),CMN_SIZE) == cid) {
 				// update the entry in the list with the public key of that client that we just received from server
 				e.set_pub_key(((PubKeyResponsePacket*)response)->get_pub_key());	
-				cout << "Public key for " << e.getName() << " was received " << endl;
+				//cout << "Public key from " << e.getName() << " was received " << endl;
+				cout << e.getName() << "'s Public key was received " << endl;
 
 				// TODO clean 
 				//std::cout << "public key that was received : " << std::endl;
@@ -169,45 +180,61 @@ void SessionManager::handle_server_response(packetReciever* pr, RequestPacketHea
 				cout << "Symmetric key received" << endl;
 				// decrypt using my private key 
 				string decrypted = rsapriv->decrypt(msg_vec->at(i).getMsg());
-				for (auto& e : clients) {
-					if (misc::convertToString(e.getId(), CMN_SIZE) == misc::convertToString(msg_vec->at(i).getPayHeader()->p.client_id, CMN_SIZE)) {
-						// update the entry in the list with the symmetric key of that client that we just received from server
-						e.set_sym_key(decrypted.c_str());
-					}
-				}
+				// update sym_key 
+				if (sym_key) delete sym_key;
+				sym_key = new unsigned char[AESWrapper::DEFAULT_KEYLENGTH];
+				memcpy(sym_key, decrypted.c_str(), AESWrapper::DEFAULT_KEYLENGTH);
 			}
 			else if (type == msgType::textMsgSend) {
 
-				// decrypt
-				// get the symmetric key from the clients list for this specific client that sent the message 
-				for (auto& e : clients) {
-					if (misc::convertToString(e.getId(), CMN_SIZE) == misc::convertToString(msg_vec->at(i).getPayHeader()->p.client_id, CMN_SIZE)) {
-						unsigned char* sym_key = e.get_sym_key();
-						if (!sym_key) {
-							cout << "Cant decrypt message" << endl;
-						}
-						else {
-							try {
-								AESWrapper aes_decription(sym_key, AESWrapper::DEFAULT_KEYLENGTH);	// create object for decrypting the message with the sender relevant symmetric key
-								std::string decrypted = aes_decription.decrypt(msg_vec->at(i).getMsg().c_str(), msg_vec->at(i).getMsg().length());
-								std::cout << decrypted << endl;
-							}
-							catch (std::exception& e) {
-								cout << "Cant decrypt message" << endl;
-							}
-						}
+				// decrypt the message 
+				if (!sym_key) {
+					throw exception("Decryption key not found !");
+				}
+				else {
+					try {
+						AESWrapper aes_decription(sym_key, AESWrapper::DEFAULT_KEYLENGTH);	// create object for decrypting the message with the sender relevant symmetric key
+						std::string decrypted = aes_decription.decrypt(msg_vec->at(i).getMsg().c_str(), msg_vec->at(i).getMsg().length());
+						std::cout << decrypted << endl;
+					}
+					catch (std::exception& e) {
+						throw exception("Failed to decrypt message");
 					}
 				}
 
-				cout << msg_vec->at(i).getMsg() << endl;
+				// get the symmetric key from the clients list for this specific client that sent the message 
+				//for (auto& e : clients) {
+				//	if (misc::convertToString(e.getId(), CMN_SIZE) == misc::convertToString(msg_vec->at(i).getPayHeader()->p.client_id, CMN_SIZE)) {
+				//		unsigned char* sym_key = e.get_sym_key();
+				//		if (!sym_key) {
+				//			throw exception("Cant decrypt message");
+				//		}
+				//		else {
+				//			try {
+				//				AESWrapper aes_decription(sym_key, AESWrapper::DEFAULT_KEYLENGTH);	// create object for decrypting the message with the sender relevant symmetric key
+				//				std::string decrypted = aes_decription.decrypt(msg_vec->at(i).getMsg().c_str(), msg_vec->at(i).getMsg().length());
+				//				std::cout << decrypted << endl;
+				//			}
+				//			catch (std::exception& e) {
+				//				throw exception("Cant decrypt message");
+				//			}
+				//		}
+				//	}
+				//}
+
+				//cout << "encrypted" << msg_vec->at(i).getMsg() << endl;		// todo remove
 				cout << "-----<EOM>------" << endl;
 			}
 		}
 		break;
 
 	case((uint16_t)responseCode::error):
-		if(request->getHeader()->h.code == (uint16_t)requestCode::userRegister)
-			cout << "This User name already exists in the server !";
+		cout << "Server responded with an error !" << endl;
+		//TODO 
+		//if (request->getHeader()->h.code == (uint16_t)requestCode::userRegister)
+		//	cout << "This User name already exists in the server !" << endl;
+		//else
+		//	cout << "Server responded with an error !" << endl;
 		break;
 
 	default:
@@ -244,7 +271,7 @@ char* SessionManager::get_recepient_id_by_name(string name) const
 			return e.getId();
 		}
 	}
-	return nullptr;	// TODO throw ?
+	return nullptr;
 }
 
 string SessionManager::get_name_by_id(char* id) const
@@ -254,11 +281,11 @@ string SessionManager::get_name_by_id(char* id) const
 			return string(e.getName());
 		}
 	}
-	return string("");	// TODO throw 
+	return nullptr;
 }
 
 SessionManager::~SessionManager() {
-	delete aes;
+	delete sym_key;
 	delete rsapriv;
 	if (pt != nullptr) delete pt;
 	if (pr != nullptr) delete pr;

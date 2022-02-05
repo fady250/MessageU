@@ -16,10 +16,10 @@ using namespace std;
 
 class SessionManager {
 private:
-	AESWrapper* aes = nullptr;
 	RSAPrivateWrapper* rsapriv = nullptr;
 	packetTransmitter* pt = nullptr;
 	packetReciever* pr = nullptr;
+	unsigned char* sym_key = nullptr; // TODO not good - need to save in client entry since we can have more than 1 client to chat with 
 	//TODO register done boolean - wo it being true - no requests can be done except of register 
 	vector<ClientEntry> clients;
 	void get_my_id(char* outBuf) const;							// get my id from my.info

@@ -54,28 +54,28 @@ void Client::handle_user_input(tcp::socket& sock)
 			cout << "Bad request code, please retry" << endl;
 		}
 		else {
-			if (code == (uint8_t)userInput::exit) break;
-			else if (code == (uint8_t)userInput::Register) {
-				if (std::filesystem::exists(std::filesystem::current_path().string() + "\\my.info")) {
-					cout << "Error ! my.info already exists !" << endl;
+			try {
+				if (code == (uint8_t)userInput::exit) break;
+				else if (code == (uint8_t)userInput::Register) {
+					if (std::filesystem::exists(std::filesystem::current_path().string() + "\\my.info")) {
+						cout << "Error ! my.info already exists !" << endl;
+					}
+					else {
+						std::cout << "Enter your name : ";
+						std::getline(std::cin, input);
+						sm->handle_user_request(sock, requestCode::userRegister, input);
+					}
 				}
-				else {
-					std::cout << "Enter your name : ";
+				else if (code == (uint8_t)userInput::RequestList) { sm->handle_user_request(sock, requestCode::clientsList, ""); }
+				else if (code == (uint8_t)userInput::RequestpubKey) {									// request client B public key
+					std::cout << "Enter username for whom you want to request its public key : ";
 					std::getline(std::cin, input);
-					sm->handle_user_request(sock, requestCode::userRegister, input);
+					sm->handle_user_request(sock, requestCode::pullClientPubKey, input);
 				}
-			}
-			else if (code == (uint8_t)userInput::RequestList) { sm->handle_user_request(sock, requestCode::clientsList, ""); }
-			else if (code == (uint8_t)userInput::RequestpubKey) {									// request client B public key
-				std::cout << "Enter username for whom you want to request its public key : ";
-				std::getline(std::cin, input);
-				sm->handle_user_request(sock, requestCode::pullClientPubKey, input);
-			}		
-			else if (code == (uint8_t)userInput::Requestmsgs) {										// request to pull waiting messages for me
-				sm->handle_user_request(sock, requestCode::pullMsgs, "");
-			}	
-			else if (code >= (uint8_t)userInput::SendTxtMsg && code <= (uint8_t)userInput::SendSymKey) {
-				try {
+				else if (code == (uint8_t)userInput::Requestmsgs) {										// request to pull waiting messages for me
+					sm->handle_user_request(sock, requestCode::pullMsgs, "");
+				}
+				else if (code >= (uint8_t)userInput::SendTxtMsg && code <= (uint8_t)userInput::SendSymKey) {
 					std::cout << "Enter target username : ";
 					std::getline(std::cin, input);
 					if (code == (uint8_t)userInput::SendTxtMsg)											// send text message to client B
@@ -85,12 +85,12 @@ void Client::handle_user_input(tcp::socket& sock)
 					if (code == (uint8_t)userInput::SendSymKey)											// send my symmetric key to client B
 						sm->handle_user_request(sock, msgType::symKeySend, input);
 				}
-				catch (exception& e) {
-					cout << e.what() << endl;
+				else {
+					cout << "Bad request code, please retry" << endl;
 				}
 			}
-			else {
-				cout << "Bad request code, please retry" << endl;
+			catch (exception& e) {
+				cout << e.what() << endl;
 			}
 		}
 		std::cout << "?";
