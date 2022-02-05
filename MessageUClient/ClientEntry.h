@@ -35,11 +35,12 @@ public:
 		return pub_key;
 	}
 
-	void set_sym_key(const char* sk) {
+	void set_sym_key(const unsigned char* sk) {
+		if (sym_key) delete sym_key;
 		sym_key = new unsigned char[SYM_KEY_LEN];
 		memcpy(sym_key, sk, SYM_KEY_LEN);
 	}
-	void set_pub_key(const char* pk) {
+	void set_pub_key(const unsigned char* pk) {
 		pub_key = new unsigned char[PUB_KEY_LEN];
 		memcpy(pub_key, pk, PUB_KEY_LEN);
 	}
