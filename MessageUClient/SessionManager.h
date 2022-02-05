@@ -16,13 +16,13 @@ using namespace std;
 
 class SessionManager {
 private:
-	AESWrapper* aes = nullptr;
 	RSAPrivateWrapper* rsapriv = nullptr;
 	packetTransmitter* pt = nullptr;
 	packetReciever* pr = nullptr;
 	//TODO register done boolean - wo it being true - no requests can be done except of register 
 	vector<ClientEntry> clients;
-	void get_my_id(char* outBuf) const;							// get my id from my.info
+	void get_my_id(char* outBuf) const;				// get my id from my.info
+	string get_my_private_key() const;				// get my private key from my.info
 	char* get_recepient_id_by_name(string name) const;
 	string get_name_by_id(char* id) const;
 	void handle_server_response(packetReciever* pr, RequestPacketHeader* request);

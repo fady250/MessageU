@@ -9,7 +9,7 @@ int main()
         client->start();
         delete client;
     }
-    catch (exception e) {
+    catch (exception& e) {
         cout << e.what() << "\nexisting" << endl;
     }
     exit(0);
