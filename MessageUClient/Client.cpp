@@ -26,7 +26,7 @@ void Client::start()
 	boost::asio::io_context io_context;
 	tcp::socket s(io_context);
 	tcp::resolver resolver(io_context);
-	boost::asio::connect(s, resolver.resolve(address,port));
+	boost::asio::connect(s, resolver.resolve(address,port));  // try catch ?
 
 	std::cout << "MessageU client at your service !\n";
 	std::cout << "110) Register\n";
@@ -49,7 +49,7 @@ void Client::handle_user_input(tcp::socket& sock)
 {
 	for (std::string input; std::getline(std::cin, input);) {
 		// validate input 
-		uint8_t code = atoi(input.c_str());
+		uint8_t code = atoi(input.c_str());  // safe ?
 		if (!code && input != "0") {
 			cout << "Bad request code, please retry" << endl;
 		}
@@ -67,22 +67,22 @@ void Client::handle_user_input(tcp::socket& sock)
 					}
 				}
 				else if (code == (uint8_t)userInput::RequestList) { sm->handle_user_request(sock, requestCode::clientsList, ""); }
-				else if (code == (uint8_t)userInput::RequestpubKey) {									// request client B public key
+				else if (code == (uint8_t)userInput::RequestpubKey) {						// request client B public key
 					std::cout << "Enter username for whom you want to request its public key : ";
 					std::getline(std::cin, input);
 					sm->handle_user_request(sock, requestCode::pullClientPubKey, input);
 				}
-				else if (code == (uint8_t)userInput::Requestmsgs) {										// request to pull waiting messages for me
+				else if (code == (uint8_t)userInput::Requestmsgs) {							// request to pull waiting messages for me
 					sm->handle_user_request(sock, requestCode::pullMsgs, "");
 				}
 				else if (code >= (uint8_t)userInput::SendTxtMsg && code <= (uint8_t)userInput::SendSymKey) {
 					std::cout << "Enter target username : ";
 					std::getline(std::cin, input);
-					if (code == (uint8_t)userInput::SendTxtMsg)											// send text message to client B
+					if (code == (uint8_t)userInput::SendTxtMsg)								// send text message to client B
 						sm->handle_user_request(sock, msgType::textMsgSend, input);
-					if (code == (uint8_t)userInput::RequestSymKey)										// request client B symmetric key
+					if (code == (uint8_t)userInput::RequestSymKey)							// request client B symmetric key
 						sm->handle_user_request(sock, msgType::symKeyReq, input);
-					if (code == (uint8_t)userInput::SendSymKey)											// send my symmetric key to client B
+					if (code == (uint8_t)userInput::SendSymKey)								// send my symmetric key to client B
 						sm->handle_user_request(sock, msgType::symKeySend, input);
 				}
 				else {
@@ -100,5 +100,5 @@ void Client::handle_user_input(tcp::socket& sock)
 
 Client::~Client()
 {
-	if(sm != nullptr) delete sm;
+	delete sm;
 }

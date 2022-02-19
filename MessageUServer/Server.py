@@ -114,6 +114,7 @@ class Server(object):
                 values = (VERSION, ResponseCode.registerSuccess.value, CLIENT_ID_LEN, *(tuple(uid_bytes)))
                 struct.pack_into(frmt, buf, 0, *values)
                 conn.sendall(buf)
+         
 
             elif code == RequestCode.clientsList.value:
                 frmt = '<BHI' + (self.__clients.__len__()-1) * (NAME_MAX_SIZE + CLIENT_ID_LEN) * 'B'

@@ -119,23 +119,18 @@ void SessionManager::handle_server_response(packetReciever* pr, RequestPacketHea
 	switch (response->getHeader()->h.code)
 	{
 	case((uint16_t)responseCode::registerSucc):
-		outfilex.open("my.info");// , std::ios_base::binary);
+		outfilex.open("my.info");
 		if (!outfilex) {
 			throw exception("Unable to create file my.info !");
 		}
 		name = string(((RegisterPacket*)request)->getPay()->h.name) +"\n";	// The name is null terminated , its safe to send it to string ctor 
-		outfilex.write(name.c_str(), name.size());
-		//cid = string(((RegisterSuccessPacket*)response)->getPay());	
+		outfilex.write(name.c_str(), name.size());	
 		cid = misc::convertToString(((RegisterSuccessPacket*)response)->getPay(), CMN_SIZE);// my id from server 
 		for (int i = 0; i < CMN_SIZE; i++)
 			outfilex << std::hex << std::setfill('0') << std::setw(2) << ((int)cid[i] & 0xff);
 		outfilex << endl;
-		//key = string(rsapriv->getPrivateKey());
-		//cout << key.size();
-		//outfilex.write(key.c_str(), key.size());	
 		base64key = Base64Wrapper::encode(rsapriv->getPrivateKey());
 		outfilex.write(base64key.c_str(),base64key.size());	
-		//cout << base64key.size(); // TODO clean
 		outfilex.close();
 		break;
 
@@ -156,21 +151,13 @@ void SessionManager::handle_server_response(packetReciever* pr, RequestPacketHea
 			if (misc::convertToString(e.getId(),CMN_SIZE) == cid) {
 				// update the entry in the list with the public key of that client that we just received from server
 				e.set_pub_key(((PubKeyResponsePacket*)response)->get_pub_key());	
-				//cout << "Public key from " << e.getName() << " was received " << endl;
 				cout << e.getName() << "'s Public key was received " << endl;
-
-				// TODO clean 
-				//std::cout << "public key that was received : " << std::endl;
-				//std::string pubk(((PubKeyResponsePacket*)response)->get_pub_key(), PUB_KEY_LEN);
-				//for (int i = 0; i < pubk.size(); i++)
-				//	std::cout << std::hex << std::setfill('0') << std::setw(2) << ((int)pubk[i] & 0xff);
 			}
 		}
 		break;
 
 	case((uint16_t)responseCode::msgSent):
 		cout << "message was sent successfully ( may not be read yet )" << endl;
-		//cout << "message ID : " << *(uint32_t*)(((MessageSentPacket*)response)->getMessageId()) << endl;
 		break;
 
 	case((uint16_t)responseCode::msgPull):
@@ -296,7 +283,7 @@ string SessionManager::get_name_by_id(char* id) const
 
 SessionManager::~SessionManager() {
 	delete rsapriv;
-	if (pt != nullptr) delete pt;
-	if (pr != nullptr) delete pr;
+	delete pt;
+	delete pr;
 }
 
