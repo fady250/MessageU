@@ -49,7 +49,7 @@ void Client::handle_user_input(tcp::socket& sock)
 {
 	for (std::string input; std::getline(std::cin, input);) {
 		// validate input 
-		uint8_t code = atoi(input.c_str());  // safe ?
+		uint8_t code = (uint8_t)atoi(input.c_str());  
 		if (!code && input != "0") {
 			cout << "Bad request code, please retry" << endl;
 		}

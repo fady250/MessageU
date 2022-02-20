@@ -27,14 +27,16 @@ void SessionManager::handle_user_request(tcp::socket& sock, requestCode rc, stri
 		get_my_id(my_cid);
 		if (rc == requestCode::clientsList || rc == requestCode::pullMsgs) 
 			request = new RequestPacketHeader(my_cid, (uint16_t)rc);		// header only 
-		if (rc == requestCode::pullClientPubKey) {
+		else if (rc == requestCode::pullClientPubKey) {
 			string rec_cid = get_recepient_id_by_name(input);	// get the client id from the list of available clients 
 			if (rec_cid.empty()) {
 				throw exception("The user you try to send to doesnt exist !");
 			}
 			request = new PubKeyPullPacket(my_cid, (uint16_t)rc, rec_cid.c_str());		
 		}
-		// else ? TODO
+		else {
+			return;// never reach here
+		}
 	}
 
 	pt->send(sock, request);
@@ -48,6 +50,7 @@ void SessionManager::handle_user_request(tcp::socket& sock, msgType mt, string i
 	
 	char my_cid[CMN_SIZE];	//only 16 bytes , keep on the stack ...
 	get_my_id(my_cid);		// if its one of the below requests i should already have cid ( these requests are not reachable if user didnt register )
+	string local_input;
 	
 	// get the client id from the list of available clients 
 	string recepient_id = get_recepient_id_by_name(input);
@@ -57,9 +60,9 @@ void SessionManager::handle_user_request(tcp::socket& sock, msgType mt, string i
 	RequestPacketHeader* request = nullptr;
 	
 	if (mt == msgType::textMsgSend) {
-		// get the message here as input from user and send it downstream	//TODO
+		// get the message here as input from user and send it
 		std::cout << "Enter the text message : ";
-		std::getline(std::cin, input);		
+		std::getline(std::cin, local_input);
 
 		//encrypt message with symmetric key 
 		for (auto& e : clients) {
@@ -67,7 +70,7 @@ void SessionManager::handle_user_request(tcp::socket& sock, msgType mt, string i
 				unsigned char* sym_key = e.get_sym_key();
 				if (sym_key) {
 					AESWrapper aes(sym_key, AESWrapper::DEFAULT_KEYLENGTH);
-					std::string encrypted_msg = aes.encrypt(input.c_str(), input.length());
+					std::string encrypted_msg = aes.encrypt(local_input.c_str(), local_input.length());
 					request = new MsgSendPacket(my_cid, recepient_id.c_str(), (uint8_t)mt, encrypted_msg);
 				}
 			}
@@ -142,8 +145,8 @@ void SessionManager::handle_server_response(packetReciever* pr, RequestPacketHea
 			cout << "There are no Clients" << endl;
 		}
 		else {
-			for (int i = 0; i < client_vec->size(); i++) {
-				clients.push_back(client_vec->at(i));		// TODO CC should be used here 
+			for (unsigned int i = 0; i < client_vec->size(); i++) {
+				clients.push_back(client_vec->at(i));	
 				cout << client_vec->at(i).getName() << endl;
 			}
 		}
@@ -167,7 +170,7 @@ void SessionManager::handle_server_response(packetReciever* pr, RequestPacketHea
 
 	case((uint16_t)responseCode::msgPull):
 		msg_vec = ((MessagePacket*)response)->getPay();
-		for (int i = 0; i < msg_vec->size(); i++) {
+		for (unsigned int i = 0; i < msg_vec->size(); i++) {
 			name = get_name_by_id(msg_vec->at(i).getPayHeader()->p.client_id);
 			cout << "From: " << name << "\nContent: " << endl;
 
@@ -204,13 +207,12 @@ void SessionManager::handle_server_response(packetReciever* pr, RequestPacketHea
 								std::string decrypted = aes_decription.decrypt(msg_vec->at(i).getMsg().c_str(), msg_vec->at(i).getMsg().length());
 								std::cout << decrypted << endl;
 							}
-							catch (std::exception& e) {
+							catch (std::exception& ) {
 								throw exception("Failed to decrypt message");
 							}
 						}
 					}
 				}
-				//cout << "encrypted" << msg_vec->at(i).getMsg() << endl;		// todo remove
 				cout << "-----<EOM>------" << endl;
 			}
 		}
@@ -237,7 +239,7 @@ void SessionManager::get_my_id(char* outBuf) const
 		getline(input_stream, line);	// ignore name 
 		getline(input_stream, line);
 		std::stringstream ss;
-		for (int i = 0; i < line.size() && i < CMN_SIZE*2; i+=2) {
+		for (unsigned int i = 0; i < line.size() && i < CMN_SIZE*2; i+=2) {
 			// convert back each two hex characters into raw data (extended ASCII value)
 			std::istringstream iss(line.substr(i, 2));
 			iss >> std::hex >> temp;
@@ -254,7 +256,6 @@ string SessionManager::get_my_private_key() const
 	}
 	else {
 		string line, private_key;
-		int temp;
 		getline(input_stream, line);	// ignore name 
 		getline(input_stream, line);	// ignore uuid
 		while (std::getline(input_stream, line))

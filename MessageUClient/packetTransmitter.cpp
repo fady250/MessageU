@@ -16,7 +16,7 @@ void packetTransmitter::send(tcp::socket& sock, RequestPacketHeader* rp) {
 			boost::asio::write(sock, boost::asio::buffer(((MsgSendPacket*)rp)->getPay()->p.msg_content, ((MsgSendPacket*)rp)->getPay()->p.content_size));	// send the content according to its size
 		}
 	}
-	catch (std::exception& ex) {
+	catch (std::exception&) {
 		throw std::exception("Error while sending packet");
 	}	
 }

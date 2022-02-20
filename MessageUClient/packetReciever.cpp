@@ -23,7 +23,7 @@ void packetReciever::recieve(tcp::socket& sock)
 		else if (rhu.h.code == (uint16_t)responseCode::clientList) {
 			uint32_t numOfClients = rhu.h.payload_size / (CMN_SIZE + MAX_NAME_SIZE);
 			rp = new ClientListPacket(&rhu);
-			for (int i = 0; i < numOfClients; i++) {
+			for (unsigned int i = 0; i < numOfClients; i++) {
 				char id[CMN_SIZE];
 				char name[MAX_NAME_SIZE];
 				length = boost::asio::read(sock, boost::asio::buffer(id, CMN_SIZE));
@@ -74,7 +74,7 @@ void packetReciever::recieve(tcp::socket& sock)
 			throw std::exception();
 		}
 	}
-	catch (std::exception& ex) {
+	catch (std::exception&) {
 		throw std::exception("Error while receiving packet");
 	}
 
