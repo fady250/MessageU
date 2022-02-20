@@ -15,7 +15,7 @@ public:
 	responseHeaderUnion* getHeader() const {
 		return rh;
 	}
-	~ResponsePacketHeader() {
+	virtual ~ResponsePacketHeader() {
 		delete rh;
 	}
 };

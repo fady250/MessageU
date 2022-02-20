@@ -68,7 +68,7 @@ void Client::handle_user_input(tcp::socket& sock)
 				}
 				else if (code == (uint8_t)userInput::RequestList) { sm->handle_user_request(sock, requestCode::clientsList, ""); }
 				else if (code == (uint8_t)userInput::RequestpubKey) {						// request client B public key
-					std::cout << "Enter username for whom you want to request its public key : ";
+					std::cout << "Enter target username for public key request: ";
 					std::getline(std::cin, input);
 					sm->handle_user_request(sock, requestCode::pullClientPubKey, input);
 				}

@@ -10,7 +10,7 @@ enum class userInput {Register = 110, RequestList = 120, RequestpubKey = 130, Re
 
 enum class requestCode { exit = 0, userRegister = 1100, clientsList = 1101, pullClientPubKey = 1102, sendMsg = 1103, pullMsgs = 1104 };
 
-enum class msgType { symKeyReq = 1, symKeySend = 2, textMsgSend = 3, fileSend = 4 };	// relevant for requestCode sendMsg
+enum class msgType { symKeyReq = 1, symKeySend = 2, textMsgSend = 3 };	// relevant for requestCode sendMsg
 
 enum class responseCode { registerSucc = 2100, clientList = 2101, pubKey = 2102, msgSent = 2103, msgPull = 2104, error = 9000};
 

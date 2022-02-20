@@ -18,7 +18,7 @@ public:
 	requestHeaderUnion* getHeader() const {
 		return rh;
 	}
-	~RequestPacketHeader() {			// TODO if we delete object of type derived class through this base class pointer, this destructor needs to be virtual in order for it to be called
+	virtual ~RequestPacketHeader() {
 		delete rh;
 	}
 };
