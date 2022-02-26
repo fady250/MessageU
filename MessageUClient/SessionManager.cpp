@@ -208,7 +208,7 @@ void SessionManager::handle_server_response(packetReciever* pr, RequestPacketHea
 								std::cout << decrypted << endl;
 							}
 							catch (std::exception& ) {
-								throw exception("Failed to decrypt message");
+								std::cout << "Failed to decrypt message" << endl; // dont throw, allow moving to next message
 							}
 						}
 					}
