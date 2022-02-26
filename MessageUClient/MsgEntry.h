@@ -29,6 +29,6 @@ public:
 
 	~MsgEntry() {
 		delete mppu;
-		delete message_content;
+		delete[] message_content;
 	}
 };

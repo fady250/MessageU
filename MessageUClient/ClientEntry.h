@@ -20,8 +20,8 @@ public:
 		memcpy(client_id, ce.client_id, CMN_SIZE);
 		memcpy(client_name, ce.client_name, MAX_NAME_SIZE);
 	}
-	char* getId()const {		// TODO change to returning string 
-		return client_id;
+	std::string getId()const {		
+		return misc::convertToString(client_id,CMN_SIZE);
 	}
 	char* getName()const {
 		return client_name;
@@ -36,7 +36,7 @@ public:
 	}
 
 	void set_sym_key(const unsigned char* sk) {
-		if (sym_key) delete sym_key;
+		if (sym_key) delete[] sym_key;
 		sym_key = new unsigned char[SYM_KEY_LEN];
 		memcpy(sym_key, sk, SYM_KEY_LEN);
 	}
@@ -46,9 +46,9 @@ public:
 	}
 
 	~ClientEntry() {
-		delete client_id;
-		delete client_name;
-		delete sym_key;
-		delete pub_key;
+		delete[] client_id;
+		delete[] client_name;
+		delete[] sym_key;
+		delete[] pub_key;
 	}
 };

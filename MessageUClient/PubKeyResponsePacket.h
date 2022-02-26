@@ -7,7 +7,7 @@ private:
 	char* client_id;
 	unsigned char* public_key;
 public:
-	PubKeyResponsePacket(responseHeaderUnion* rh, char* cid, char* pubkey) :ResponsePacketHeader(rh->h.version, rh->h.code, rh->h.payload_size) {
+	PubKeyResponsePacket(responseHeaderUnion* rh, const char* cid, const char* pubkey) :ResponsePacketHeader(rh->h.version, rh->h.code, rh->h.payload_size) {
 		client_id = new char[CMN_SIZE];
 		public_key = new unsigned char[PUB_KEY_LEN];
 		memcpy(client_id, cid, CMN_SIZE);
@@ -20,7 +20,7 @@ public:
 		return public_key;
 	}
 	~PubKeyResponsePacket() {
-		delete client_id;
-		delete public_key;
+		delete[] client_id;
+		delete[] public_key;
 	}
 };

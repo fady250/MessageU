@@ -17,7 +17,7 @@ using boost::asio::ip::tcp;
 class packetTransmitter {
 
 public:
-	packetTransmitter();
+	packetTransmitter() {};
 	void send(tcp::socket& sock, RequestPacketHeader* rp);
-	~packetTransmitter();
+	~packetTransmitter() {};
 };

@@ -23,7 +23,7 @@ private:
 	vector<ClientEntry> clients;
 	void get_my_id(char* outBuf) const;				// get my id from my.info
 	string get_my_private_key() const;				// get my private key from my.info
-	char* get_recepient_id_by_name(string name) const;
+	string get_recepient_id_by_name(string name) const;
 	string get_name_by_id(char* id) const;
 	void handle_server_response(packetReciever* pr, RequestPacketHeader* request);
 public:

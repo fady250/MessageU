@@ -4,13 +4,14 @@
 
 int main()
 {
+    Client* client = nullptr;
     try {
-        Client* client = new Client();
+        client = new Client();
         client->start();
-        delete client;
     }
     catch (exception& e) {
         cout << e.what() << "\nexisting" << endl;
     }
+    delete client;
     exit(0);
 }
