@@ -60,22 +60,21 @@ void SessionManager::handle_user_request(tcp::socket& sock, msgType mt, string i
 	RequestPacketHeader* request = nullptr;
 	
 	if (mt == msgType::textMsgSend) {
-		// get the message here as input from user and send it
-		std::cout << "Enter the text message : ";
-		std::getline(std::cin, local_input);
-
 		//encrypt message with symmetric key 
 		for (auto& e : clients) {
 			if (e.getId() == recepient_id) {
 				unsigned char* sym_key = e.get_sym_key();
 				if (sym_key) {
+					// get the message here as input from user and send it
+					std::cout << "Enter the text message : ";
+					std::getline(std::cin, local_input);
 					AESWrapper aes(sym_key, AESWrapper::DEFAULT_KEYLENGTH);
 					std::string encrypted_msg = aes.encrypt(local_input.c_str(), local_input.length());
 					request = new MsgSendPacket(my_cid, recepient_id.c_str(), (uint8_t)mt, encrypted_msg);
 				}
-			}
-			else {
-				throw exception("Encryption key not found !");
+				else {
+					throw exception("Cant process request - Encryption key not found !");
+				}
 			}
 		}
 	}
@@ -216,6 +215,8 @@ void SessionManager::handle_server_response(packetReciever* pr, RequestPacketHea
 				cout << "-----<EOM>------" << endl;
 			}
 		}
+		if(msg_vec->size() == 0)
+			cout << "No new messages" << endl;
 		break;
 
 	case((uint16_t)responseCode::error):
