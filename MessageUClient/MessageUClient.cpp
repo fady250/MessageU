@@ -13,5 +13,4 @@ int main()
         cout << e.what() << "\nexisting" << endl;
     }
     delete client;
-    exit(0);
 }
