@@ -84,7 +84,7 @@ class Server(object):
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
             s.bind(('', self.__PORT))
             s.listen(1000)
-            # s.setblocking(False)      #TODO TODO !!!!
+            s.setblocking(False)
             self.__sel.register(s, selectors.EVENT_READ, self.accept)
             while True:
                 events = self.__sel.select()
@@ -95,7 +95,7 @@ class Server(object):
     def accept(self, sock, mask):
         conn, addr = sock.accept()
         print('accepted', conn, 'from', addr)
-        # conn.setblocking(False)  #TODO TODO !!!!!
+        conn.setblocking(False)
         self.__sel.register(conn, selectors.EVENT_READ, self.handle_client_request)
 
     def handle_client_request(self, conn, mask):
